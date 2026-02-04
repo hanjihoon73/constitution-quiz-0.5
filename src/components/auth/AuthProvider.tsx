@@ -24,15 +24,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const supabase = createClient();
 
-    // DB에서 사용자 정보 조회
+    // DB에서 사용자 정보 조회 및 auth_id 업데이트
     const fetchDbUser = async (authUser: User) => {
+        // 1. 먼저 provider_id로 사용자 조회
         const { data } = await supabase
             .from('users')
             .select('*')
             .eq('provider_id', authUser.id)
             .single();
 
-        setDbUser(data);
+        if (data) {
+            // 2. auth_id가 없거나 다르면 업데이트 (RLS 정책 호환성)
+            if (data.auth_id !== authUser.id) {
+                await supabase
+                    .from('users')
+                    .update({ auth_id: authUser.id })
+                    .eq('id', data.id);
+
+                // 업데이트된 데이터로 설정
+                setDbUser({ ...data, auth_id: authUser.id });
+            } else {
+                setDbUser(data);
+            }
+        } else {
+            setDbUser(null);
+        }
     };
 
     // DB 사용자 정보 새로고침

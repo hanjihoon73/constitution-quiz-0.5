@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { User } from 'lucide-react';
+import { LogoutButton } from '@/components/auth/LogoutButton';
 
 interface HeaderProps {
     showProfile?: boolean;
@@ -28,15 +29,21 @@ export function Header({ showProfile = true }: HeaderProps) {
                     />
                 </Link>
 
-                {/* 프로필 아이콘 */}
-                {showProfile && (
-                    <Link
-                        href="/profile"
-                        className="flex h-10 w-10 items-center justify-center rounded-full transition-colors hover:bg-gray-100"
-                    >
-                        <User className="h-6 w-6 text-gray-700" />
-                    </Link>
-                )}
+                {/* 우측 영역 */}
+                <div className="flex items-center gap-2">
+                    {/* 임시 로그아웃 버튼 */}
+                    <LogoutButton />
+
+                    {/* 프로필 아이콘 */}
+                    {showProfile && (
+                        <Link
+                            href="/profile"
+                            className="flex h-10 w-10 items-center justify-center rounded-full transition-colors hover:bg-gray-100"
+                        >
+                            <User className="h-6 w-6 text-gray-700" />
+                        </Link>
+                    )}
+                </div>
             </div>
         </header>
     );
