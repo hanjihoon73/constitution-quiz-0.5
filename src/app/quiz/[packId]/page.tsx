@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useQuiz } from '@/hooks/useQuiz';
 import {
@@ -8,7 +8,6 @@ import {
     QuizNavigation,
     QuizContent,
     QuizActions,
-    AnswerOverlay,
 } from '@/components/quiz';
 import { Loading } from '@/components/common';
 
@@ -38,21 +37,10 @@ export default function QuizPage() {
         completeQuizPack,
     } = useQuiz(packId);
 
-    // 오버레이 상태
-    const [showOverlay, setShowOverlay] = useState(false);
-    const [overlayIsCorrect, setOverlayIsCorrect] = useState(false);
-
     // 정답 확인 핸들러
     const handleCheckAnswer = useCallback(() => {
-        const isCorrect = checkAnswer();
-        setOverlayIsCorrect(isCorrect);
-        setShowOverlay(true);
+        checkAnswer();
     }, [checkAnswer]);
-
-    // 오버레이 완료 후
-    const handleOverlayComplete = useCallback(() => {
-        setShowOverlay(false);
-    }, []);
 
     // 퀴즈 완료 핸들러
     const handleComplete = useCallback(async () => {
@@ -159,13 +147,7 @@ export default function QuizPage() {
                 onNext={goToNext}
                 onComplete={handleComplete}
             />
-
-            {/* 정오답 오버레이 */}
-            <AnswerOverlay
-                isCorrect={overlayIsCorrect}
-                isVisible={showOverlay}
-                onComplete={handleOverlayComplete}
-            />
         </QuizLayout>
     );
 }
+

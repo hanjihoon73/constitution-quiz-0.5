@@ -45,7 +45,7 @@ interface UseQuizReturn extends UseQuizState {
 }
 
 export function useQuiz(packId: number): UseQuizReturn {
-    const { dbUser } = useAuth();
+    const { dbUser, isLoading: authLoading } = useAuth();
     const [state, setState] = useState<UseQuizState>({
         packData: null,
         currentIndex: 0,
@@ -62,6 +62,11 @@ export function useQuiz(packId: number): UseQuizReturn {
     // 퀴즈 데이터 로드
     useEffect(() => {
         async function loadQuizzes() {
+            // 인증 로딩 중이면 대기
+            if (authLoading) {
+                return;
+            }
+
             try {
                 setState(prev => ({ ...prev, isLoading: true, error: null }));
 
@@ -105,7 +110,7 @@ export function useQuiz(packId: number): UseQuizReturn {
         }
 
         loadQuizzes();
-    }, [packId, dbUser?.id]);
+    }, [packId, dbUser?.id, authLoading]);
 
     const currentQuiz = state.packData?.quizzes[state.currentIndex] || null;
     const totalQuizzes = state.packData?.quizzes.length || 0;
