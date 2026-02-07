@@ -330,3 +330,149 @@ export async function getUserPreviousAnswers(userQuizpackId: number): Promise<Pr
         isCorrect: item.is_correct,
     }));
 }
+
+/**
+ * 퀴즈팩 통계를 업데이트합니다 (완료 시).
+ */
+export async function updateQuizpackStatistics(
+    packId: number,
+    correctCount: number,
+    totalQuizCount: number
+) {
+    const supabase = createClient();
+    const correctRate = totalQuizCount > 0 ? (correctCount / totalQuizCount) * 100 : 0;
+
+    // 기존 통계 조회
+    const { data: existing } = await supabase
+        .from('quizpack_statistics')
+        .select('*')
+        .eq('quizpack_id', packId)
+        .maybeSingle();
+
+    if (existing) {
+        // 기존 통계 업데이트 (누적)
+        const newTotalCompletions = (existing.total_completions || 0) + 1;
+        const newTotalCorrectCount = (existing.total_correct_count || 0) + correctCount;
+        const newTotalQuizCount = (existing.total_quiz_count || 0) + totalQuizCount;
+        const newAverageCorrectRate = newTotalQuizCount > 0
+            ? (newTotalCorrectCount / newTotalQuizCount) * 100
+            : 0;
+
+        const { error } = await supabase
+            .from('quizpack_statistics')
+            .update({
+                total_completions: newTotalCompletions,
+                total_correct_count: newTotalCorrectCount,
+                total_quiz_count: newTotalQuizCount,
+                average_correct_rate: newAverageCorrectRate,
+            })
+            .eq('quizpack_id', packId);
+
+        if (error) {
+            console.error('퀴즈팩 통계 업데이트 에러:', error);
+            throw error;
+        }
+    } else {
+        // 새 통계 생성
+        const { error } = await supabase
+            .from('quizpack_statistics')
+            .insert({
+                quizpack_id: packId,
+                total_completions: 1,
+                total_correct_count: correctCount,
+                total_quiz_count: totalQuizCount,
+                average_correct_rate: correctRate,
+            });
+
+        if (error) {
+            console.error('퀴즈팩 통계 생성 에러:', error);
+            throw error;
+        }
+    }
+}
+
+/**
+ * 사용자의 퀴즈팩 평점을 저장합니다.
+ */
+export async function saveQuizpackRating(
+    userId: number,
+    packId: number,
+    rating: number
+) {
+    const supabase = createClient();
+
+    // 기존 평점 조회
+    const { data: existing } = await supabase
+        .from('user_quizpack_ratings')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('quizpack_id', packId)
+        .maybeSingle();
+
+    if (existing) {
+        // 기존 평점 업데이트
+        const { error } = await supabase
+            .from('user_quizpack_ratings')
+            .update({ rating })
+            .eq('id', existing.id);
+
+        if (error) {
+            console.error('평점 업데이트 에러:', error);
+            throw error;
+        }
+    } else {
+        // 새 평점 생성
+        const { error } = await supabase
+            .from('user_quizpack_ratings')
+            .insert({
+                user_id: userId,
+                quizpack_id: packId,
+                rating,
+            });
+
+        if (error) {
+            console.error('평점 생성 에러:', error);
+            throw error;
+        }
+    }
+
+    // quizpack_statistics의 평점 집계 업데이트
+    await updateQuizpackAverageRating(packId);
+}
+
+/**
+ * 퀴즈팩의 평균 평점을 업데이트합니다.
+ */
+async function updateQuizpackAverageRating(packId: number) {
+    const supabase = createClient();
+
+    // 해당 퀴즈팩의 모든 평점 조회
+    const { data: ratings } = await supabase
+        .from('user_quizpack_ratings')
+        .select('rating')
+        .eq('quizpack_id', packId);
+
+    if (!ratings || ratings.length === 0) return;
+
+    const ratingSum = ratings.reduce((sum, r) => sum + r.rating, 0);
+    const ratingCount = ratings.length;
+    const averageRating = ratingSum / ratingCount;
+
+    // quizpack_statistics 업데이트
+    const { data: existing } = await supabase
+        .from('quizpack_statistics')
+        .select('id')
+        .eq('quizpack_id', packId)
+        .maybeSingle();
+
+    if (existing) {
+        await supabase
+            .from('quizpack_statistics')
+            .update({
+                rating_count: ratingCount,
+                rating_sum: ratingSum,
+                average_rating: averageRating,
+            })
+            .eq('quizpack_id', packId);
+    }
+}

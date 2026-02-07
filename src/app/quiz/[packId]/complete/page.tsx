@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { MobileFrame } from '@/components/common';
 import { useAuth } from '@/components/auth';
-import { getUserQuizProgress } from '@/lib/api/quiz';
+import { getUserQuizProgress, updateQuizpackStatistics, saveQuizpackRating } from '@/lib/api/quiz';
 import { Star } from 'lucide-react';
 
 interface QuizResult {
@@ -23,6 +23,7 @@ export default function QuizCompletePage() {
     const [result, setResult] = useState<QuizResult | null>(null);
     const [rating, setRating] = useState<number>(0);
     const [isLoading, setIsLoading] = useState(true);
+    const [isSaving, setIsSaving] = useState(false);
 
     // 퀴즈 결과 로드
     useEffect(() => {
@@ -49,15 +50,49 @@ export default function QuizCompletePage() {
         loadResult();
     }, [dbUser?.id, packId]);
 
+    // 통계/평점 저장 후 이동
+    const handleSaveAndNavigate = useCallback(async (destination: 'next' | 'home') => {
+        if (!dbUser?.id || !result) return;
+
+        setIsSaving(true);
+        try {
+            // 1. 퀴즈팩 통계 업데이트
+            await updateQuizpackStatistics(
+                packId,
+                result.correctCount,
+                result.totalQuizCount
+            );
+
+            // 2. 평점 저장 (선택한 경우에만)
+            if (rating > 0) {
+                await saveQuizpackRating(dbUser.id, packId, rating);
+            }
+
+            // 3. 이동
+            if (destination === 'next') {
+                router.push(`/quiz/${packId + 1}`);
+            } else {
+                router.push('/');
+            }
+        } catch (error) {
+            console.error('저장 에러:', error);
+            // 에러가 있어도 이동
+            if (destination === 'next') {
+                router.push(`/quiz/${packId + 1}`);
+            } else {
+                router.push('/');
+            }
+        }
+    }, [dbUser?.id, packId, result, rating, router]);
+
     // 다음 퀴즈팩으로 이동
     const handleNextQuizpack = () => {
-        const nextPackId = packId + 1;
-        router.push(`/quiz/${nextPackId}`);
+        handleSaveAndNavigate('next');
     };
 
     // 홈으로 이동
     const handleGoHome = () => {
-        router.push('/');
+        handleSaveAndNavigate('home');
     };
 
     if (isLoading) {
@@ -237,22 +272,24 @@ export default function QuizCompletePage() {
             }}>
                 <button
                     onClick={handleNextQuizpack}
+                    disabled={isSaving}
                     style={{
                         width: '100%',
                         padding: '16px',
-                        backgroundColor: '#f59e0b',
+                        backgroundColor: isSaving ? '#d1d5db' : '#f59e0b',
                         color: 'white',
                         border: 'none',
                         borderRadius: '12px',
                         fontSize: '16px',
                         fontWeight: '600',
-                        cursor: 'pointer',
+                        cursor: isSaving ? 'not-allowed' : 'pointer',
                     }}
                 >
-                    다음 퀴즈팩 시작
+                    {isSaving ? '저장 중...' : '다음 퀴즈팩 시작'}
                 </button>
                 <button
                     onClick={handleGoHome}
+                    disabled={isSaving}
                     style={{
                         width: '100%',
                         padding: '16px',
@@ -262,10 +299,10 @@ export default function QuizCompletePage() {
                         borderRadius: '12px',
                         fontSize: '16px',
                         fontWeight: '500',
-                        cursor: 'pointer',
+                        cursor: isSaving ? 'not-allowed' : 'pointer',
                     }}
                 >
-                    홈으로 돌아가기
+                    {isSaving ? '저장 중...' : '홈으로 돌아가기'}
                 </button>
             </div>
         </MobileFrame>
