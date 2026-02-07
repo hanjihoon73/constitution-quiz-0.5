@@ -301,3 +301,32 @@ export async function getUserQuizpackId(userId: number, packId: number): Promise
 
     return data?.id || null;
 }
+
+/**
+ * 사용자의 이전 퀴즈 답변을 조회합니다.
+ */
+export interface PreviousAnswer {
+    quizId: number;
+    selectedAnswers: number[] | Record<string, number>;
+    isCorrect: boolean;
+}
+
+export async function getUserPreviousAnswers(userQuizpackId: number): Promise<PreviousAnswer[]> {
+    const supabase = createClient();
+
+    const { data, error } = await supabase
+        .from('user_quizzes')
+        .select('quiz_id, selected_answers, is_correct')
+        .eq('user_quizpack_id', userQuizpackId);
+
+    if (error) {
+        console.error('이전 답변 조회 에러:', error);
+        return [];
+    }
+
+    return (data || []).map(item => ({
+        quizId: item.quiz_id,
+        selectedAnswers: item.selected_answers,
+        isCorrect: item.is_correct,
+    }));
+}

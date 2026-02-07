@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Quiz, QuizPackData, getQuizzesByPackId, saveQuizProgress, getUserQuizProgress, saveUserQuizAnswer, getUserQuizpackId } from '@/lib/api/quiz';
+import { Quiz, QuizPackData, getQuizzesByPackId, saveQuizProgress, getUserQuizProgress, saveUserQuizAnswer, getUserQuizpackId, getUserPreviousAnswers } from '@/lib/api/quiz';
 import { useAuth } from '@/components/auth';
 
 // 사용자의 답안 타입
@@ -74,6 +74,9 @@ export function useQuiz(packId: number): UseQuizReturn {
 
                 // 기존 진행 상태 확인 (이어하기)
                 let startIndex = 0;
+                let userQuizpackId: number | null = null;
+                const restoredAnswers = new Map<number, UserAnswer>();
+
                 if (dbUser?.id) {
                     const progress = await getUserQuizProgress(dbUser.id, packId);
                     if (progress && progress.status === 'in_progress') {
@@ -83,18 +86,56 @@ export function useQuiz(packId: number): UseQuizReturn {
                             data.quizzes.length - 1
                         );
                     }
+
+                    // user_quizpack_id 조회
+                    userQuizpackId = await getUserQuizpackId(dbUser.id, packId);
+
+                    // 이전 답변 복원
+                    if (userQuizpackId) {
+                        const previousAnswers = await getUserPreviousAnswers(userQuizpackId);
+
+                        previousAnswers.forEach(answer => {
+                            // 해당 퀴즈 찾기
+                            const quiz = data.quizzes.find(q => q.id === answer.quizId);
+                            if (!quiz) return;
+
+                            if (quiz.quizType === 'choiceblank') {
+                                // 빈칸채우기: Record를 Map으로 변환
+                                const blankAnswers = new Map<number, number>();
+                                if (answer.selectedAnswers && typeof answer.selectedAnswers === 'object' && !Array.isArray(answer.selectedAnswers)) {
+                                    Object.entries(answer.selectedAnswers).forEach(([pos, choiceId]) => {
+                                        blankAnswers.set(Number(pos), Number(choiceId));
+                                    });
+                                }
+                                restoredAnswers.set(answer.quizId, {
+                                    quizId: answer.quizId,
+                                    selectedChoiceIds: [],
+                                    blankAnswers,
+                                    isCorrect: answer.isCorrect,
+                                });
+                            } else {
+                                // 선다형/O·X: 배열 그대로 사용
+                                restoredAnswers.set(answer.quizId, {
+                                    quizId: answer.quizId,
+                                    selectedChoiceIds: Array.isArray(answer.selectedAnswers) ? answer.selectedAnswers : [],
+                                    isCorrect: answer.isCorrect,
+                                });
+                            }
+                        });
+                    }
                 }
 
-                // user_quizpack_id 조회
-                let userQuizpackId: number | null = null;
-                if (dbUser?.id) {
-                    userQuizpackId = await getUserQuizpackId(dbUser.id, packId);
-                }
+                // 현재 퀴즈가 이미 풀린 상태인지 확인
+                const currentQuiz = data.quizzes[startIndex];
+                const currentQuizAnswered = currentQuiz ? restoredAnswers.has(currentQuiz.id) && restoredAnswers.get(currentQuiz.id)?.isCorrect !== undefined : false;
 
                 setState(prev => ({
                     ...prev,
                     packData: data,
                     currentIndex: startIndex,
+                    answers: restoredAnswers,
+                    isChecked: currentQuizAnswered,
+                    showExplanation: currentQuizAnswered,
                     isLoading: false,
                     startTime: new Date(),
                     userQuizpackId,
@@ -236,37 +277,54 @@ export function useQuiz(packId: number): UseQuizReturn {
     // 다음 퀴즈로 이동
     const goToNext = useCallback(() => {
         if (isLastQuiz) return;
-        setState(prev => ({
-            ...prev,
-            currentIndex: prev.currentIndex + 1,
-            isChecked: false,
-            showHint: false,
-            showExplanation: false,
-        }));
+        setState(prev => {
+            const nextIndex = prev.currentIndex + 1;
+            const nextQuiz = prev.packData?.quizzes[nextIndex];
+            const hasAnswered = nextQuiz ? prev.answers.has(nextQuiz.id) && prev.answers.get(nextQuiz.id)?.isCorrect !== undefined : false;
+
+            return {
+                ...prev,
+                currentIndex: nextIndex,
+                isChecked: hasAnswered,
+                showHint: false,
+                showExplanation: hasAnswered,
+            };
+        });
     }, [isLastQuiz]);
 
     // 이전 퀴즈로 이동
     const goToPrev = useCallback(() => {
         if (isFirstQuiz) return;
-        setState(prev => ({
-            ...prev,
-            currentIndex: prev.currentIndex - 1,
-            isChecked: false,
-            showHint: false,
-            showExplanation: false,
-        }));
+        setState(prev => {
+            const prevIndex = prev.currentIndex - 1;
+            const prevQuiz = prev.packData?.quizzes[prevIndex];
+            const hasAnswered = prevQuiz ? prev.answers.has(prevQuiz.id) && prev.answers.get(prevQuiz.id)?.isCorrect !== undefined : false;
+
+            return {
+                ...prev,
+                currentIndex: prevIndex,
+                isChecked: hasAnswered,
+                showHint: false,
+                showExplanation: hasAnswered,
+            };
+        });
     }, [isFirstQuiz]);
 
     // 특정 퀴즈로 이동
     const goToQuiz = useCallback((index: number) => {
         if (index < 0 || index >= totalQuizzes) return;
-        setState(prev => ({
-            ...prev,
-            currentIndex: index,
-            isChecked: false,
-            showHint: false,
-            showExplanation: false,
-        }));
+        setState(prev => {
+            const targetQuiz = prev.packData?.quizzes[index];
+            const hasAnswered = targetQuiz ? prev.answers.has(targetQuiz.id) && prev.answers.get(targetQuiz.id)?.isCorrect !== undefined : false;
+
+            return {
+                ...prev,
+                currentIndex: index,
+                isChecked: hasAnswered,
+                showHint: false,
+                showExplanation: hasAnswered,
+            };
+        });
     }, [totalQuizzes]);
 
     // 힌트 토글

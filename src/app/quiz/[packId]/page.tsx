@@ -39,7 +39,11 @@ export default function QuizPage() {
 
     // 정답 확인 핸들러
     const handleCheckAnswer = useCallback(() => {
-        checkAnswer();
+        const isCorrect = checkAnswer();
+
+        // 정오답 사운드 재생
+        const audio = new Audio(isCorrect ? '/sounds/correct.wav' : '/sounds/wrong.wav');
+        audio.play().catch(() => { }); // 재생 실패 시 무시
     }, [checkAnswer]);
 
     // 퀴즈 완료 핸들러

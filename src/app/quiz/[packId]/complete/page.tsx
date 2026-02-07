@@ -1,0 +1,273 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import { MobileFrame } from '@/components/common';
+import { useAuth } from '@/components/auth';
+import { getUserQuizProgress } from '@/lib/api/quiz';
+import { Star } from 'lucide-react';
+
+interface QuizResult {
+    totalQuizCount: number;
+    correctCount: number;
+    incorrectCount: number;
+    correctRate: number;
+}
+
+export default function QuizCompletePage() {
+    const params = useParams();
+    const router = useRouter();
+    const packId = Number(params.packId);
+    const { dbUser } = useAuth();
+
+    const [result, setResult] = useState<QuizResult | null>(null);
+    const [rating, setRating] = useState<number>(0);
+    const [isLoading, setIsLoading] = useState(true);
+
+    // 퀴즈 결과 로드
+    useEffect(() => {
+        async function loadResult() {
+            if (!dbUser?.id) return;
+
+            try {
+                const progress = await getUserQuizProgress(dbUser.id, packId);
+                if (progress) {
+                    setResult({
+                        totalQuizCount: progress.total_quiz_count || 0,
+                        correctCount: progress.correct_count || 0,
+                        incorrectCount: progress.incorrect_count || 0,
+                        correctRate: progress.correct_rate || 0,
+                    });
+                }
+            } catch (error) {
+                console.error('결과 로드 에러:', error);
+            } finally {
+                setIsLoading(false);
+            }
+        }
+
+        loadResult();
+    }, [dbUser?.id, packId]);
+
+    // 다음 퀴즈팩으로 이동
+    const handleNextQuizpack = () => {
+        const nextPackId = packId + 1;
+        router.push(`/quiz/${nextPackId}`);
+    };
+
+    // 홈으로 이동
+    const handleGoHome = () => {
+        router.push('/');
+    };
+
+    if (isLoading) {
+        return (
+            <MobileFrame className="flex flex-col items-center justify-center">
+                <div style={{ fontSize: '16px', color: '#6b7280' }}>결과 불러오는 중...</div>
+            </MobileFrame>
+        );
+    }
+
+    return (
+        <MobileFrame className="flex flex-col bg-gradient-to-b from-amber-50 to-white">
+            {/* 상단 축하 메시지 */}
+            <div style={{
+                padding: '40px 20px',
+                textAlign: 'center',
+            }}>
+                <div style={{
+                    fontSize: '48px',
+                    marginBottom: '16px',
+                }}>
+                    🎉
+                </div>
+                <h1 style={{
+                    fontSize: '24px',
+                    fontWeight: 'bold',
+                    color: '#1f2937',
+                    marginBottom: '8px',
+                }}>
+                    퀴즈팩 완료!
+                </h1>
+                <p style={{
+                    fontSize: '14px',
+                    color: '#6b7280',
+                }}>
+                    수고하셨습니다!
+                </p>
+            </div>
+
+            {/* 결과 요약 카드 */}
+            <div style={{
+                margin: '0 20px',
+                padding: '24px',
+                backgroundColor: 'white',
+                borderRadius: '16px',
+                boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+            }}>
+                <h2 style={{
+                    fontSize: '16px',
+                    fontWeight: '600',
+                    color: '#1f2937',
+                    marginBottom: '20px',
+                    textAlign: 'center',
+                }}>
+                    결과 요약
+                </h2>
+
+                {/* 정답률 원형 */}
+                <div style={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    marginBottom: '24px',
+                }}>
+                    <div style={{
+                        width: '120px',
+                        height: '120px',
+                        borderRadius: '50%',
+                        background: `conic-gradient(#f59e0b ${(result?.correctRate || 0) * 3.6}deg, #e5e7eb 0deg)`,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                    }}>
+                        <div style={{
+                            width: '100px',
+                            height: '100px',
+                            borderRadius: '50%',
+                            backgroundColor: 'white',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            flexDirection: 'column',
+                        }}>
+                            <span style={{
+                                fontSize: '28px',
+                                fontWeight: 'bold',
+                                color: '#f59e0b',
+                            }}>
+                                {result?.correctRate?.toFixed(0) || 0}%
+                            </span>
+                            <span style={{
+                                fontSize: '12px',
+                                color: '#6b7280',
+                            }}>
+                                정답률
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                {/* 상세 결과 */}
+                <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: '1fr 1fr 1fr',
+                    gap: '16px',
+                    textAlign: 'center',
+                }}>
+                    <div>
+                        <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#1f2937' }}>
+                            {result?.totalQuizCount || 0}
+                        </div>
+                        <div style={{ fontSize: '12px', color: '#6b7280' }}>총 문제</div>
+                    </div>
+                    <div>
+                        <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#10b981' }}>
+                            {result?.correctCount || 0}
+                        </div>
+                        <div style={{ fontSize: '12px', color: '#6b7280' }}>정답</div>
+                    </div>
+                    <div>
+                        <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#ef4444' }}>
+                            {result?.incorrectCount || 0}
+                        </div>
+                        <div style={{ fontSize: '12px', color: '#6b7280' }}>오답</div>
+                    </div>
+                </div>
+            </div>
+
+            {/* 선호도 입력 (별점) */}
+            <div style={{
+                margin: '24px 20px',
+                padding: '24px',
+                backgroundColor: 'white',
+                borderRadius: '16px',
+                boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+                textAlign: 'center',
+            }}>
+                <h3 style={{
+                    fontSize: '14px',
+                    color: '#6b7280',
+                    marginBottom: '12px',
+                }}>
+                    이 퀴즈팩은 어땠나요?
+                </h3>
+                <div style={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    gap: '8px',
+                }}>
+                    {[1, 2, 3, 4, 5].map((star) => (
+                        <button
+                            key={star}
+                            onClick={() => setRating(star)}
+                            style={{
+                                background: 'none',
+                                border: 'none',
+                                cursor: 'pointer',
+                                padding: '4px',
+                            }}
+                        >
+                            <Star
+                                size={32}
+                                fill={star <= rating ? '#f59e0b' : 'none'}
+                                color={star <= rating ? '#f59e0b' : '#d1d5db'}
+                            />
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            {/* 버튼 영역 */}
+            <div style={{
+                padding: '20px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '12px',
+                marginTop: 'auto',
+            }}>
+                <button
+                    onClick={handleNextQuizpack}
+                    style={{
+                        width: '100%',
+                        padding: '16px',
+                        backgroundColor: '#f59e0b',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '12px',
+                        fontSize: '16px',
+                        fontWeight: '600',
+                        cursor: 'pointer',
+                    }}
+                >
+                    다음 퀴즈팩 시작
+                </button>
+                <button
+                    onClick={handleGoHome}
+                    style={{
+                        width: '100%',
+                        padding: '16px',
+                        backgroundColor: 'transparent',
+                        color: '#6b7280',
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '12px',
+                        fontSize: '16px',
+                        fontWeight: '500',
+                        cursor: 'pointer',
+                    }}
+                >
+                    홈으로 돌아가기
+                </button>
+            </div>
+        </MobileFrame>
+    );
+}
