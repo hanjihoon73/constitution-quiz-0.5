@@ -137,11 +137,11 @@ Is_At: 26.01
         Table quizpack_loadmap {
           id bigint [primary key]
           quizpack_id bigint [ref: > quizpacks.id]
-          order integer [not null, note: '기본 순서 1,2,3...']
+          quizpack_order integer [not null, note: '기본 순서 1,2,3...']
         
           Indexes {
             quizpack_id [unique, note: '퀴즈팩당 하나의 순서만 존재']
-            order [note: '순서별 정렬 조회 최적화']
+            quizpack_order [note: '순서별 정렬 조회 최적화']
           }
         }
         
@@ -241,7 +241,7 @@ Is_At: 26.01
           id bigint [primary key]
           user_id bigint [not null, note: '사용자 ID']
           quizpack_id bigint [not null]
-          quizpack_order integer [not null, note: 'quizpack_loadmap.order의 스냅샷 (퀴즈팩 unlock 시점 기준)']
+          quizpack_order integer [not null, note: 'quizpack_loadmap.quizpack_order의 스냅샷 (퀴즈팩 unlock 시점 기준)']
           status quizpack_status [default: 'closed', note: '진행 상태'] // 상태 - 초기값은 closed (가입 시 로직으로 1번만 opened)
           note: '''
         	  사용자별 퀴즈팩 상태 관리 요구사항:
@@ -460,7 +460,7 @@ Is_At: 26.01
         
         - `users` - provider, provider_id - **READ** (기존 사용자 확인)
         - `users` - id, provider, provider_id, is_active, created_at - **CREATE** (신규 사용자, nickname 제외)
-        - `user_sessions` - user_id, session_type='login', session_token, created_at - **CREATE**
+        - `user_login_history` - user_id, provider, logged_in_at - **CREATE**
         
         ### 닉네임 확정
         
@@ -470,7 +470,7 @@ Is_At: 26.01
         ### 홈 화면 최초 진입
         
         - `quizpacks` - is_active, is_deleted - **READ** (모든 활성 퀴즈팩 조회)
-        - `quizpack_loadmap` - quizpack_id, order - **READ** (순서 정보)
+        - `quizpack_loadmap` - quizpack_id, quizpack_order - **READ** (순서 정보)
         - `user_quizpacks` - user_id - **READ** (기존 레코드 확인)
         - `user_quizpacks` - user_id, quizpack_id, quizpack_order, status, total_quiz_count, created_at - **CREATE** (모든 퀴즈팩 레코드 생성, 1번만 status='opened', 나머지 'closed')
         - `quizpack_statistics` - average_correct_rate, average_rating - **READ** (친구 정답률, 평균 선호도)
@@ -545,12 +545,12 @@ Is_At: 26.01
         
         - `users` - provider, provider_id - **READ** (기존 사용자 확인)
         - `user_sessions` - session_type='logout' - **UPDATE** (기존 세션 무효화)
-        - `user_sessions` - user_id, session_type='login', session_token, created_at - **CREATE** (새 세션 생성)
+        - `user_login_history` - user_id, provider, logged_in_at - **CREATE**
         
         ### 홈 화면 진입
         
         - `quizpacks` - is_active, is_deleted - **READ** (활성 퀴즈팩 조회)
-        - `quizpack_loadmap` - quizpack_id, order - **READ** (순서 정보)
+        - `quizpack_loadmap` - quizpack_id, quizpack_order - **READ** (순서 정보)
         - `user_quizpacks` - user_id - **READ** (기존 진행 상황 조회)
         - `quizpack_statistics` - average_correct_rate, average_rating - **READ** (친구 정답률, 평균 선호도)
         
@@ -596,7 +596,7 @@ Is_At: 26.01
         ### 홈 화면 진입
         
         - `quizpacks` - is_active, is_deleted - **READ**
-        - `quizpack_loadmap` - quizpack_id, order - **READ**
+        - `quizpack_loadmap` - quizpack_id, quizpack_order - **READ**
         - `user_quizpacks` - user_id, status='in_progress' - **READ** (진행 중인 퀴즈팩 확인)
         - `quizpack_statistics` - average_correct_rate, average_rating - **READ**
         
@@ -856,8 +856,8 @@ Is_At: 26.01
             - 순서를 건너뛰는 것은 불가능하다.
             - 예: 1번 완료 → 3번 시작 불가 (2번을 먼저 완료해야 함)
         - 퀴즈팩 순서 변경 시:
-            - quizpack_loadmap.order가 변경되어도 이미 생성된 user_quizpacks의 quizpack_order는 변경되지 않는다.
-            - 퀴즈팩 순서는 레코드 생성 시점의 order 값으로 고정된다.
+            - quizpack_loadmap.quizpack_order가 변경되어도 이미 생성된 user_quizpacks의 quizpack_order는 변경되지 않는다.
+            - 퀴즈팩 순서는 레코드 생성 시점의 quizpack_order 값으로 고정된다.
     - 이미 완료한 퀴즈팩은 퀴즈팩의 순서와 관계 없이 선택해서 다시 할 수 있다.
     - 퀴즈와 보기 순서 랜덤화:
         - 퀴즈팩을 새로 시작할 때마다 퀴즈의 순서가 달라진다.
@@ -943,7 +943,7 @@ Is_At: 26.01
             .from('quizpacks')
             .leftJoin('quizpack_loadmap')
             .where({ is_active: true, is_deleted: false })
-            .orderBy('quizpack_loadmap.order');
+            .orderBy('quizpack_loadmap.quizpack_order');
         
           // 2. 사용자의 기존 레코드 조회
           const userQuizpacks = await db

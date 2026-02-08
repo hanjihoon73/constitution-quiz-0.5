@@ -106,6 +106,7 @@ export default function OnboardingPage() {
             // users 테이블에 사용자 정보 저장
             const insertPayload = {
                 provider_id: user.id,
+                auth_id: user.id,
                 provider: user.app_metadata.provider as 'google' | 'kakao',
                 nickname: nickname,
                 role: 'user' as const,

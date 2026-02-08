@@ -29,7 +29,7 @@ export async function getQuizpacksWithStatus(userId: number): Promise<QuizpackWi
     const { data: loadmapData, error: loadmapError } = await supabase
         .from('quizpack_loadmap')
         .select(`
-            order,
+            pack_order,
             quizpack_id,
             quizpacks!inner (
                 id,
@@ -38,7 +38,7 @@ export async function getQuizpacksWithStatus(userId: number): Promise<QuizpackWi
                 is_active
             )
         `)
-        .order('order', { ascending: true });
+        .order('pack_order', { ascending: true });
 
     if (loadmapError) {
         console.error('퀴즈팩 목록 조회 에러:', loadmapError);
@@ -106,7 +106,7 @@ export async function getQuizpacksWithStatus(userId: number): Promise<QuizpackWi
 
         return {
             id: quizpack.id,
-            order: item.order,
+            order: item.pack_order,
             keywords: quizpack.keywords || '',
             quizCount: quizpack.quiz_count_all || 0,
             status,

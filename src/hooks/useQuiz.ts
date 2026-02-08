@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Quiz, QuizPackData, getQuizzesByPackId, saveQuizProgress, getUserQuizProgress, saveUserQuizAnswer, getUserQuizpackId, getUserPreviousAnswers } from '@/lib/api/quiz';
+import { Quiz, QuizPackData, getQuizzesByPackId, saveQuizProgress, getUserQuizProgress, saveUserQuizAnswer, getUserQuizpackId, getUserPreviousAnswers, updateUserQuizpackCurrentOrder, initializeUserQuizpack } from '@/lib/api/quiz';
 import { useAuth } from '@/components/auth';
 
 // 사용자의 답안 타입
@@ -78,21 +78,31 @@ export function useQuiz(packId: number): UseQuizReturn {
                 const restoredAnswers = new Map<number, UserAnswer>();
 
                 if (dbUser?.id) {
-                    const progress = await getUserQuizProgress(dbUser.id, packId);
-                    if (progress && progress.status === 'in_progress') {
-                        // 중단한 위치부터 시작
-                        startIndex = Math.min(
-                            (progress.current_quiz_order || 1) - 1,
-                            data.quizzes.length - 1
-                        );
+                    // 퀴즈팩 세션 초기화 (없으면 생성, 있으면 ID 반환)
+                    try {
+                        userQuizpackId = await initializeUserQuizpack(dbUser.id, packId);
+                    } catch (err) {
+                        console.error('퀴즈팩 초기화 실패:', err);
                     }
 
-                    // user_quizpack_id 조회
-                    userQuizpackId = await getUserQuizpackId(dbUser.id, packId);
-
-                    // 이전 답변 복원
                     if (userQuizpackId) {
+                        // 진행 상태 조회 (초기화 후 최신 상태)
+                        const progress = await getUserQuizProgress(dbUser.id, packId);
+
+                        // 진행 중 상태면 다음 문제부터 시작
+                        if (progress.status === 'in_progress') {
+                            const lastQuizOrder = progress.current_quiz_order || 0;
+                            startIndex = Math.min(
+                                lastQuizOrder,
+                                data.quizzes.length - 1
+                            );
+                        }
+
+                        // 이전 답변 복원
                         const previousAnswers = await getUserPreviousAnswers(userQuizpackId);
+
+                        // 디버깅 로그 추가
+                        console.log(`[useQuiz] userQuizpackId: ${userQuizpackId}, 복원된 답변 수: ${previousAnswers.length}`);
 
                         previousAnswers.forEach(answer => {
                             // 해당 퀴즈 찾기
@@ -100,7 +110,7 @@ export function useQuiz(packId: number): UseQuizReturn {
                             if (!quiz) return;
 
                             if (quiz.quizType === 'choiceblank') {
-                                // 빈칸채우기: Record를 Map으로 변환
+                                // 빈칸채우기: Record를 Map으로 변환 (기존 유지)
                                 const blankAnswers = new Map<number, number>();
                                 if (answer.selectedAnswers && typeof answer.selectedAnswers === 'object' && !Array.isArray(answer.selectedAnswers)) {
                                     Object.entries(answer.selectedAnswers).forEach(([pos, choiceId]) => {
@@ -114,7 +124,7 @@ export function useQuiz(packId: number): UseQuizReturn {
                                     isCorrect: answer.isCorrect,
                                 });
                             } else {
-                                // 선다형/O·X: 배열 그대로 사용
+                                // 선다형/O·X: 배열 그대로 사용 (기존 유지)
                                 restoredAnswers.set(answer.quizId, {
                                     quizId: answer.quizId,
                                     selectedChoiceIds: Array.isArray(answer.selectedAnswers) ? answer.selectedAnswers : [],
@@ -125,9 +135,11 @@ export function useQuiz(packId: number): UseQuizReturn {
                     }
                 }
 
-                // 현재 퀴즈가 이미 풀린 상태인지 확인
+                // 현재 퀴즈 상태 설정
                 const currentQuiz = data.quizzes[startIndex];
-                const currentQuizAnswered = currentQuiz ? restoredAnswers.has(currentQuiz.id) && restoredAnswers.get(currentQuiz.id)?.isCorrect !== undefined : false;
+                const currentQuizAnswer = currentQuiz ? restoredAnswers.get(currentQuiz.id) : undefined;
+                // 이전 답변이 있고 정답 여부가 확인되었으면 체크된 상태로 표시
+                const currentQuizAnswered = !!(currentQuizAnswer && currentQuizAnswer.isCorrect !== undefined);
 
                 setState(prev => ({
                     ...prev,
@@ -277,10 +289,21 @@ export function useQuiz(packId: number): UseQuizReturn {
     // 다음 퀴즈로 이동
     const goToNext = useCallback(() => {
         if (isLastQuiz) return;
+
         setState(prev => {
             const nextIndex = prev.currentIndex + 1;
             const nextQuiz = prev.packData?.quizzes[nextIndex];
-            const hasAnswered = nextQuiz ? prev.answers.has(nextQuiz.id) && prev.answers.get(nextQuiz.id)?.isCorrect !== undefined : false;
+
+            // 다음 퀴즈의 답변 상태 확인
+            const nextQuizAnswer = nextQuiz ? prev.answers.get(nextQuiz.id) : undefined;
+            const hasAnswered = !!(nextQuizAnswer && nextQuizAnswer.isCorrect !== undefined);
+
+            // 진행 상태 업데이트 (현재 보고 있는 퀴즈가 가장 최신이면)
+            if (dbUser?.id && prev.userQuizpackId) {
+                // 다음 문제로 진입했으므로 nextIndex(현재까지 완료한 문제 수와 동일)를 현재 진행 위치로 저장
+                updateUserQuizpackCurrentOrder(prev.userQuizpackId, nextIndex)
+                    .catch((err: unknown) => console.error('진행 위치 저장 실패:', err));
+            }
 
             return {
                 ...prev,
@@ -290,15 +313,19 @@ export function useQuiz(packId: number): UseQuizReturn {
                 showExplanation: hasAnswered,
             };
         });
-    }, [isLastQuiz]);
+    }, [isLastQuiz, dbUser?.id]);
 
     // 이전 퀴즈로 이동
     const goToPrev = useCallback(() => {
         if (isFirstQuiz) return;
+
         setState(prev => {
             const prevIndex = prev.currentIndex - 1;
             const prevQuiz = prev.packData?.quizzes[prevIndex];
-            const hasAnswered = prevQuiz ? prev.answers.has(prevQuiz.id) && prev.answers.get(prevQuiz.id)?.isCorrect !== undefined : false;
+
+            // 이전 퀴즈의 답변 상태 확인
+            const prevQuizAnswer = prevQuiz ? prev.answers.get(prevQuiz.id) : undefined;
+            const hasAnswered = !!(prevQuizAnswer && prevQuizAnswer.isCorrect !== undefined);
 
             return {
                 ...prev,

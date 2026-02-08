@@ -4,14 +4,15 @@ import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { MobileFrame } from '@/components/common';
 import { useAuth } from '@/components/auth';
-import { getUserQuizProgress, updateQuizpackStatistics, saveQuizpackRating } from '@/lib/api/quiz';
-import { Star } from 'lucide-react';
+import { getUserQuizProgress, updateQuizpackStatistics, saveQuizpackRating, unlockNextQuizpack } from '@/lib/api/quiz';
+import { Star, Clock } from 'lucide-react';
 
 interface QuizResult {
     totalQuizCount: number;
     correctCount: number;
     incorrectCount: number;
     correctRate: number;
+    totalTimeSeconds: number;
 }
 
 export default function QuizCompletePage() {
@@ -38,6 +39,7 @@ export default function QuizCompletePage() {
                         correctCount: progress.correct_count || 0,
                         incorrectCount: progress.incorrect_count || 0,
                         correctRate: progress.correct_rate || 0,
+                        totalTimeSeconds: progress.total_time_seconds || 0,
                     });
                 }
             } catch (error) {
@@ -68,20 +70,26 @@ export default function QuizCompletePage() {
                 await saveQuizpackRating(dbUser.id, packId, rating);
             }
 
-            // 3. 이동
+            // 3. 다음 퀴즈팩 해금 및 이동 처리
             if (destination === 'next') {
-                router.push(`/quiz/${packId + 1}`);
+                // 다음 퀴즈팩 해금 시도
+                const nextPackId = await unlockNextQuizpack(dbUser.id, packId);
+
+                if (nextPackId) {
+                    // 다음 퀴즈팩이 있으면 이동
+                    router.push(`/quiz/${nextPackId}`);
+                } else {
+                    // 다음 퀴즈팩이 없으면 (마지막 퀴즈팩 완료)
+                    // 전면 광고나 축하 파티클 등을 보여줄 수도 있겠지만, 여기서는 홈으로 이동하며 파라미터 전달
+                    router.push('/?allClear=true');
+                }
             } else {
                 router.push('/');
             }
         } catch (error) {
             console.error('저장 에러:', error);
-            // 에러가 있어도 이동
-            if (destination === 'next') {
-                router.push(`/quiz/${packId + 1}`);
-            } else {
-                router.push('/');
-            }
+            // 에러가 있어도 일단 홈으로 이동 (데이터 불일치 방지 위해 안전한 선택)
+            router.push('/');
         }
     }, [dbUser?.id, packId, result, rating, router]);
 
@@ -93,6 +101,14 @@ export default function QuizCompletePage() {
     // 홈으로 이동
     const handleGoHome = () => {
         handleSaveAndNavigate('home');
+    };
+
+    // 시간 포맷팅 (MM:SS)
+    const formatTime = (seconds: number) => {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        const width = secs < 10 ? '0' : '';
+        return `${mins}분 ${width}${secs}초`;
     };
 
     if (isLoading) {
@@ -130,6 +146,13 @@ export default function QuizCompletePage() {
                 }}>
                     수고하셨습니다!
                 </p>
+                {/* 소요 시간 표시 */}
+                {result && result.totalTimeSeconds > 0 && (
+                    <div className="mt-4 inline-flex items-center gap-2 bg-white/50 px-4 py-2 rounded-full text-sm text-gray-600 border border-gray-200">
+                        <Clock size={16} />
+                        <span>걸린 시간: {formatTime(result.totalTimeSeconds)}</span>
+                    </div>
+                )}
             </div>
 
             {/* 결과 요약 카드 */}
