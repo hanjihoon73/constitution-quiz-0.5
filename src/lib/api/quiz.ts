@@ -124,7 +124,7 @@ export async function saveQuizProgress(
     // 기존 진행 기록 확인
     const { data: existing, error: checkError } = await supabase
         .from('user_quizpacks')
-        .select('id, session_number')
+        .select('id, session_number, status')
         .eq('user_id', userId)
         .eq('quizpack_id', packId)
         .maybeSingle();
@@ -140,13 +140,18 @@ export async function saveQuizProgress(
 
     if (existing) {
         // 업데이트
+        // 이미 completed 상태인데 in_progress로 변경하려는 경우 상태 유지 (결과보기 모드)
+        const finalStatus = (existing as { status?: string }).status === 'completed' && data.status === 'in_progress'
+            ? 'completed'
+            : data.status;
+
         const updateData: Record<string, unknown> = {
             current_quiz_order: data.currentQuizOrder,
             solved_quiz_count: data.solvedQuizCount,
             correct_count: data.correctCount,
             incorrect_count: data.incorrectCount,
             correct_rate: correctRate,
-            status: data.status,
+            status: finalStatus,
             last_played_at: new Date().toISOString(),
             modified_at: new Date().toISOString(),
         };
@@ -601,26 +606,40 @@ export async function updateUserQuizpackCurrentOrder(
 /**
  * 퀴즈팩 시작 시(진입 시) 사용자 퀴즈팩 상태를 초기화하거나 가져옵니다.
  * - 없으면 생성 (status='in_progress')
- * - 있으면 user_quizpacks ID 반환
- * - 이미 완료된 경우(completed) 재시작 처리? -> 기획에 따라 다름. 일단 ID만 반환하거나 상태 업데이트.
- *   여기서는 '이어하기'가 기본이므로, 상태가 opened이면 in_progress로 변경.
+ * - 있으면 상태에 따라 업데이트 후 user_quizpacks ID 반환
+ *   - opened → in_progress (시작)
+ *   - in_progress → last_played_at 업데이트 (이어하기)
+ *   - completed → ID만 반환 (결과보기/다시풀기는 별도 플로우)
  */
 export async function initializeUserQuizpack(userId: number, packId: number) {
     const supabase = createClient();
 
-    // 1. 기존 레코드 확인
-    const { data: existing } = await supabase
+    // 디버깅: auth 세션 상태 확인
+    const { data: { session } } = await supabase.auth.getSession();
+    console.log('[initializeUserQuizpack] userId:', userId, 'packId:', packId, 'auth.uid:', session?.user?.id ?? 'NULL');
+
+    // 1. 기존 레코드 확인 (에러 핸들링 포함)
+    const { data: existing, error: selectError } = await supabase
         .from('user_quizpacks')
         .select('id, status, session_number')
         .eq('user_id', userId)
         .eq('quizpack_id', packId)
         .maybeSingle();
 
+    if (selectError) {
+        console.error('[initializeUserQuizpack] 기존 레코드 조회 에러:', {
+            message: selectError.message,
+            code: selectError.code,
+            details: selectError.details,
+            hint: selectError.hint,
+        });
+    }
+
     if (existing) {
         // 이미 존재하면
         if (existing.status === 'opened') {
             // opened 상태면 in_progress로 변경 (시작)
-            await supabase
+            const { error: updateError } = await supabase
                 .from('user_quizpacks')
                 .update({
                     status: 'in_progress',
@@ -629,15 +648,24 @@ export async function initializeUserQuizpack(userId: number, packId: number) {
                     session_number: (existing.session_number || 0) + 1,
                 })
                 .eq('id', existing.id);
+
+            if (updateError) {
+                console.error('[initializeUserQuizpack] opened→in_progress 업데이트 에러:', updateError);
+            }
         } else if (existing.status === 'in_progress') {
             // 이미 진행 중이면 last_played_at만 업데이트
-            await supabase
+            const { error: updateError } = await supabase
                 .from('user_quizpacks')
                 .update({
                     last_played_at: new Date().toISOString(),
                 })
                 .eq('id', existing.id);
+
+            if (updateError) {
+                console.error('[initializeUserQuizpack] in_progress last_played_at 업데이트 에러:', updateError);
+            }
         }
+        // completed 상태는 별도 처리 없이 ID만 반환 (결과보기/다시풀기는 별도 플로우)
         return existing.id;
     } else {
         // 없으면 새로 생성 (status='in_progress')
@@ -672,9 +700,188 @@ export async function initializeUserQuizpack(userId: number, packId: number) {
             .single();
 
         if (error) {
-            console.error('퀴즈팩 초기화 에러:', error);
+            // UNIQUE 충돌(23505)인 경우: unlockNextQuizpack이 이미 레코드를 생성했거나
+            // React strict mode로 인해 이중 호출된 경우 → 기존 레코드를 찾아서 반환
+            if (error.code === '23505') {
+                console.log('[initializeUserQuizpack] UNIQUE 충돌 - 기존 레코드 재조회');
+                const { data: retryExisting } = await supabase
+                    .from('user_quizpacks')
+                    .select('id, status, session_number')
+                    .eq('user_id', userId)
+                    .eq('quizpack_id', packId)
+                    .maybeSingle();
+
+                if (retryExisting) {
+                    // opened 상태면 in_progress로 전환
+                    if (retryExisting.status === 'opened') {
+                        await supabase
+                            .from('user_quizpacks')
+                            .update({
+                                status: 'in_progress',
+                                started_at: new Date().toISOString(),
+                                last_played_at: new Date().toISOString(),
+                                session_number: (retryExisting.session_number || 0) + 1,
+                            })
+                            .eq('id', retryExisting.id);
+                    }
+                    console.log('[initializeUserQuizpack] 재조회 성공:', retryExisting.id);
+                    return retryExisting.id;
+                }
+            }
+
+            console.error('[initializeUserQuizpack] Insert 에러 (raw):', JSON.stringify(error));
             throw error;
         }
         return newPack.id;
     }
+}
+
+/**
+ * 퀴즈팩을 처음부터 다시 풀 수 있도록 초기화합니다.
+ * - user_quizzes에서 해당 user_quizpack_id의 모든 답변 삭제
+ * - user_quizpacks 상태를 in_progress로 변경, current_quiz_order 0으로 리셋
+ */
+export async function resetUserQuizpack(userQuizpackId: number) {
+    const supabase = createClient();
+
+    // 삭제 전 개수 확인 (디버깅용)
+    const { count: beforeCount } = await supabase
+        .from('user_quizzes')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_quizpack_id', userQuizpackId);
+
+    console.log(`[resetUserQuizpack] 삭제 전 답변 수: ${beforeCount}`);
+
+    // 1. 기존 답변 삭제
+    const { error: deleteError, count: deletedCount } = await supabase
+        .from('user_quizzes')
+        .delete({ count: 'exact' })
+        .eq('user_quizpack_id', userQuizpackId);
+
+    if (deleteError) {
+        console.error('퀴즈 답변 삭제 에러:', deleteError);
+        throw deleteError;
+    }
+
+    console.log(`[resetUserQuizpack] 삭제된 답변 수: ${deletedCount}`);
+
+    // 삭제 후 개수 확인 (디버깅용)
+    const { count: afterCount } = await supabase
+        .from('user_quizzes')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_quizpack_id', userQuizpackId);
+
+    console.log(`[resetUserQuizpack] 삭제 후 답변 수: ${afterCount}`);
+
+    // 2. user_quizpacks 상태 초기화
+    const { error: updateError } = await supabase
+        .from('user_quizpacks')
+        .update({
+            status: 'in_progress',
+            current_quiz_order: 0,
+            solved_quiz_count: 0,
+            correct_count: 0,
+            incorrect_count: 0,
+            correct_rate: null,
+            started_at: new Date().toISOString(),
+            last_played_at: new Date().toISOString(),
+            completed_at: null,
+        })
+        .eq('id', userQuizpackId);
+
+    if (updateError) {
+        console.error('퀴즈팩 상태 초기화 에러:', updateError);
+        throw updateError;
+    }
+
+    return true;
+}
+
+/**
+ * 현재 진행 중(in_progress)인 퀴즈팩을 조회합니다.
+ * 특정 packId를 제외할 수 있습니다 (자기 자신 제외용).
+ */
+export async function getInProgressQuizpack(userId: number, excludePackId?: number) {
+    const supabase = createClient();
+
+    let query = supabase
+        .from('user_quizpacks')
+        .select('id, quizpack_id, quizpack_order, status, solved_quiz_count')
+        .eq('user_id', userId)
+        .eq('status', 'in_progress');
+
+    if (excludePackId) {
+        query = query.neq('quizpack_id', excludePackId);
+    }
+
+    const { data, error } = await query.maybeSingle();
+
+    if (error) {
+        console.error('[getInProgressQuizpack] 조회 에러:', error);
+        return null;
+    }
+
+    return data;
+}
+
+/**
+ * 진행 중인 퀴즈팩을 중단하고 직전 상태로 복원합니다.
+ * - 답변 기록이 있으면 → completed로 복원 + 답변 삭제
+ * - 답변 기록이 없으면 → opened로 복원
+ */
+export async function abortInProgressQuizpack(userQuizpackId: number) {
+    const supabase = createClient();
+
+    // 1. 현재 세션에서 풀었던 답변이 있는지 확인
+    const { count: answerCount } = await supabase
+        .from('user_quizzes')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_quizpack_id', userQuizpackId);
+
+    if (answerCount && answerCount > 0) {
+        // 답변이 있으면 completed로 복원 (이전에 완료된 퀴즈팩을 다시 푼 경우)
+        // 현재 세션의 답변 삭제
+        await supabase
+            .from('user_quizzes')
+            .delete()
+            .eq('user_quizpack_id', userQuizpackId);
+
+        // completed 상태로 복원
+        const { error } = await supabase
+            .from('user_quizpacks')
+            .update({
+                status: 'completed',
+                current_quiz_order: 0,
+                solved_quiz_count: 0,
+                correct_count: 0,
+                incorrect_count: 0,
+                correct_rate: null,
+                last_played_at: new Date().toISOString(),
+            })
+            .eq('id', userQuizpackId);
+
+        if (error) {
+            console.error('[abortInProgressQuizpack] completed 복원 에러:', error);
+            throw error;
+        }
+    } else {
+        // 답변이 없으면 opened로 복원 (아직 아무것도 풀지 않은 경우)
+        const { error } = await supabase
+            .from('user_quizpacks')
+            .update({
+                status: 'opened',
+                current_quiz_order: 0,
+                solved_quiz_count: 0,
+                started_at: null,
+                last_played_at: new Date().toISOString(),
+            })
+            .eq('id', userQuizpackId);
+
+        if (error) {
+            console.error('[abortInProgressQuizpack] opened 복원 에러:', error);
+            throw error;
+        }
+    }
+
+    return true;
 }

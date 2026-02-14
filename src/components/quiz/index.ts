@@ -7,3 +7,4 @@ export { TrueFalse } from './TrueFalse';
 export { ChoiceBlank } from './ChoiceBlank';
 export { AnswerOverlay } from './AnswerOverlay';
 export { ExitConfirmDialog } from './ExitConfirmDialog';
+export { AbortConfirmDialog } from './AbortConfirmDialog';

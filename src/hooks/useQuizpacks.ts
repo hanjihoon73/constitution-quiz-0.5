@@ -15,18 +15,21 @@ interface UseQuizpacksReturn {
  * 퀴즈팩 목록을 가져오는 커스텀 훅
  */
 export function useQuizpacks(): UseQuizpacksReturn {
-    const { dbUser, isLoading: authLoading } = useAuth();
+    const { user, dbUser, isLoading: authLoading } = useAuth();
     const [quizpacks, setQuizpacks] = useState<QuizpackWithStatus[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<Error | null>(null);
 
+    // user는 있지만 dbUser가 아직 없는 상태 = fetchDbUser 진행 중
+    const isDbUserLoading = !!user && !dbUser && !authLoading;
+
     const fetchQuizpacks = useCallback(async () => {
-        // 인증 로딩 중이면 대기
-        if (authLoading) {
+        // 인증 로딩 중이거나 DB 사용자 로딩 중이면 대기
+        if (authLoading || isDbUserLoading) {
             return;
         }
 
-        // dbUser가 없으면 빈 목록 반환
+        // dbUser가 없으면 빈 목록 반환 (비로그인 상태)
         if (!dbUser?.id) {
             setQuizpacks([]);
             setIsLoading(false);
@@ -45,7 +48,7 @@ export function useQuizpacks(): UseQuizpacksReturn {
         } finally {
             setIsLoading(false);
         }
-    }, [dbUser?.id, authLoading]);
+    }, [dbUser?.id, authLoading, isDbUserLoading]);
 
     useEffect(() => {
         fetchQuizpacks();
@@ -53,7 +56,7 @@ export function useQuizpacks(): UseQuizpacksReturn {
 
     return {
         quizpacks,
-        isLoading: authLoading || isLoading,
+        isLoading: authLoading || isDbUserLoading || isLoading,
         error,
         refetch: fetchQuizpacks,
     };

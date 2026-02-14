@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { Quiz, QuizPackData, getQuizzesByPackId, saveQuizProgress, getUserQuizProgress, saveUserQuizAnswer, getUserQuizpackId, getUserPreviousAnswers, updateUserQuizpackCurrentOrder, initializeUserQuizpack } from '@/lib/api/quiz';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { Quiz, QuizPackData, getQuizzesByPackId, saveQuizProgress, getUserQuizProgress, saveUserQuizAnswer, getUserQuizpackId, getUserPreviousAnswers, updateUserQuizpackCurrentOrder, initializeUserQuizpack, resetUserQuizpack } from '@/lib/api/quiz';
 import { useAuth } from '@/components/auth';
 
 // 사용자의 답안 타입
@@ -43,8 +43,12 @@ interface UseQuizReturn extends UseQuizState {
     correctCount: number;
     incorrectCount: number;
 }
+interface UseQuizOptions {
+    isRestart?: boolean;  // 다시풀기 모드 - 이전 답변 복원 생략
+}
 
-export function useQuiz(packId: number): UseQuizReturn {
+export function useQuiz(packId: number, options: UseQuizOptions = {}): UseQuizReturn {
+    const { isRestart = false } = options;
     const { dbUser, isLoading: authLoading } = useAuth();
     const [state, setState] = useState<UseQuizState>({
         packData: null,
@@ -59,13 +63,23 @@ export function useQuiz(packId: number): UseQuizReturn {
         userQuizpackId: null,
     });
 
+    const isLoadingRef = useRef(false);
+
     // 퀴즈 데이터 로드
     useEffect(() => {
+        let cancelled = false;
+
         async function loadQuizzes() {
             // 인증 로딩 중이면 대기
             if (authLoading) {
                 return;
             }
+
+            // 이미 로딩 중이면 중복 호출 방지 (React strict mode 대응)
+            if (isLoadingRef.current) {
+                return;
+            }
+            isLoadingRef.current = true;
 
             try {
                 setState(prev => ({ ...prev, isLoading: true, error: null }));
@@ -89,51 +103,57 @@ export function useQuiz(packId: number): UseQuizReturn {
                         // 진행 상태 조회 (초기화 후 최신 상태)
                         const progress = await getUserQuizProgress(dbUser.id, packId);
 
-                        // 진행 중 상태면 다음 문제부터 시작
-                        if (progress.status === 'in_progress') {
-                            const lastQuizOrder = progress.current_quiz_order || 0;
-                            startIndex = Math.min(
-                                lastQuizOrder,
-                                data.quizzes.length - 1
-                            );
-                        }
+                        // 다시풀기 모드가 아닐 때만 이전 답변 복원
+                        if (!isRestart) {
+                            const previousAnswers = await getUserPreviousAnswers(userQuizpackId);
 
-                        // 이전 답변 복원
-                        const previousAnswers = await getUserPreviousAnswers(userQuizpackId);
+                            // 디버깅 로그 추가
+                            console.log(`[useQuiz] userQuizpackId: ${userQuizpackId}, status: ${progress?.status}, 복원된 답변 수: ${previousAnswers.length}`);
 
-                        // 디버깅 로그 추가
-                        console.log(`[useQuiz] userQuizpackId: ${userQuizpackId}, 복원된 답변 수: ${previousAnswers.length}`);
+                            // 진행 중(in_progress)일 때만 중간부터 시작, 그 외에는 처음부터
+                            if (progress && progress.status === 'in_progress') {
+                                // 저장된 답변 수만큼 이동 (풀지 않은 첫 문제부터 시작)
+                                startIndex = Math.min(
+                                    previousAnswers.length,
+                                    data.quizzes.length - 1
+                                );
+                            }
 
-                        previousAnswers.forEach(answer => {
-                            // 해당 퀴즈 찾기
-                            const quiz = data.quizzes.find(q => q.id === answer.quizId);
-                            if (!quiz) return;
+                            previousAnswers.forEach(answer => {
+                                // 해당 퀴즈 찾기
+                                const quiz = data.quizzes.find(q => q.id === answer.quizId);
+                                if (!quiz) return;
 
-                            if (quiz.quizType === 'choiceblank') {
-                                // 빈칸채우기: Record를 Map으로 변환 (기존 유지)
-                                const blankAnswers = new Map<number, number>();
-                                if (answer.selectedAnswers && typeof answer.selectedAnswers === 'object' && !Array.isArray(answer.selectedAnswers)) {
-                                    Object.entries(answer.selectedAnswers).forEach(([pos, choiceId]) => {
-                                        blankAnswers.set(Number(pos), Number(choiceId));
+                                if (quiz.quizType === 'choiceblank') {
+                                    // 빈칸채우기: Record를 Map으로 변환 (기존 유지)
+                                    const blankAnswers = new Map<number, number>();
+                                    if (answer.selectedAnswers && typeof answer.selectedAnswers === 'object' && !Array.isArray(answer.selectedAnswers)) {
+                                        Object.entries(answer.selectedAnswers).forEach(([pos, choiceId]) => {
+                                            blankAnswers.set(Number(pos), Number(choiceId));
+                                        });
+                                    }
+                                    restoredAnswers.set(answer.quizId, {
+                                        quizId: answer.quizId,
+                                        selectedChoiceIds: [],
+                                        blankAnswers,
+                                        isCorrect: answer.isCorrect,
+                                    });
+                                } else {
+                                    // 선다형/O·X: 배열 그대로 사용 (기존 유지)
+                                    restoredAnswers.set(answer.quizId, {
+                                        quizId: answer.quizId,
+                                        selectedChoiceIds: Array.isArray(answer.selectedAnswers) ? answer.selectedAnswers : [],
+                                        isCorrect: answer.isCorrect,
                                     });
                                 }
-                                restoredAnswers.set(answer.quizId, {
-                                    quizId: answer.quizId,
-                                    selectedChoiceIds: [],
-                                    blankAnswers,
-                                    isCorrect: answer.isCorrect,
-                                });
-                            } else {
-                                // 선다형/O·X: 배열 그대로 사용 (기존 유지)
-                                restoredAnswers.set(answer.quizId, {
-                                    quizId: answer.quizId,
-                                    selectedChoiceIds: Array.isArray(answer.selectedAnswers) ? answer.selectedAnswers : [],
-                                    isCorrect: answer.isCorrect,
-                                });
-                            }
-                        });
+                            });
+                        } else {
+                            console.log(`[useQuiz] 다시풀기 모드 - 이전 답변 복원 생략`);
+                        }
                     }
                 }
+
+                if (cancelled) return;
 
                 // 현재 퀴즈 상태 설정
                 const currentQuiz = data.quizzes[startIndex];
@@ -154,15 +174,23 @@ export function useQuiz(packId: number): UseQuizReturn {
                 }));
             } catch (err) {
                 console.error('퀴즈 로드 에러:', err);
-                setState(prev => ({
-                    ...prev,
-                    isLoading: false,
-                    error: err instanceof Error ? err : new Error('퀴즈를 불러오는데 실패했습니다.'),
-                }));
+                if (!cancelled) {
+                    setState(prev => ({
+                        ...prev,
+                        isLoading: false,
+                        error: err instanceof Error ? err : new Error('퀴즈를 불러오는데 실패했습니다.'),
+                    }));
+                }
+            } finally {
+                isLoadingRef.current = false;
             }
         }
 
         loadQuizzes();
+
+        return () => {
+            cancelled = true;
+        };
     }, [packId, dbUser?.id, authLoading]);
 
     const currentQuiz = state.packData?.quizzes[state.currentIndex] || null;

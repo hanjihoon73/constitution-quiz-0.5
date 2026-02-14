@@ -1,5 +1,6 @@
 'use client';
 
+import { useRef, useEffect, useMemo } from 'react';
 import { QuizpackCard } from './QuizpackCard';
 import { QuizpackWithStatus } from '@/lib/api/quizpacks';
 
@@ -7,12 +8,39 @@ interface QuizpackListProps {
     quizpacks: QuizpackWithStatus[];
     isLoading: boolean;
     error: Error | null;
+    onCompletedClick?: (quizpackId: number) => void;  // 완료된 퀴즈팩 클릭 콜백
+    onOpenedClick?: (quizpackId: number) => void;  // 열림 퀴즈팩 클릭 콜백
 }
 
 /**
  * 퀴즈팩 목록 컴포넌트
  */
-export function QuizpackList({ quizpacks, isLoading, error }: QuizpackListProps) {
+export function QuizpackList({ quizpacks, isLoading, error, onCompletedClick, onOpenedClick }: QuizpackListProps) {
+    const currentRef = useRef<HTMLDivElement>(null);
+
+    // current_quizpack 식별: in_progress 우선 → 첫 번째 opened
+    const currentQuizpackId = useMemo(() => {
+        const inProgress = quizpacks.find(q => q.status === 'in_progress');
+        if (inProgress) return inProgress.id;
+        const firstOpened = quizpacks.find(q => q.status === 'opened');
+        if (firstOpened) return firstOpened.id;
+        return null;
+    }, [quizpacks]);
+
+    // 현재 퀴즈팩으로 자동 스크롤
+    useEffect(() => {
+        if (currentRef.current && currentQuizpackId) {
+            // 약간의 딜레이 후 스크롤 (렌더링 완료 대기)
+            const timer = setTimeout(() => {
+                currentRef.current?.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center',
+                });
+            }, 300);
+            return () => clearTimeout(timer);
+        }
+    }, [currentQuizpackId]);
+
     // 로딩 상태
     if (isLoading) {
         return (
@@ -55,9 +83,22 @@ export function QuizpackList({ quizpacks, isLoading, error }: QuizpackListProps)
     // 퀴즈팩 목록
     return (
         <div className="px-4 py-6 overflow-y-auto">
-            {quizpacks.map((quizpack) => (
-                <QuizpackCard key={quizpack.id} quizpack={quizpack} />
-            ))}
+            {quizpacks.map((quizpack) => {
+                const isCurrent = quizpack.id === currentQuizpackId;
+                return (
+                    <div
+                        key={quizpack.id}
+                        ref={isCurrent ? currentRef : undefined}
+                    >
+                        <QuizpackCard
+                            quizpack={quizpack}
+                            onCompletedClick={onCompletedClick}
+                            onOpenedClick={onOpenedClick}
+                            isCurrent={isCurrent}
+                        />
+                    </div>
+                );
+            })}
         </div>
     );
 }

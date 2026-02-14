@@ -24,6 +24,7 @@ export function AllClearDialog({ open, onOpenChange }: AllClearDialogProps) {
     const nickname = dbUser?.nickname || '사용자';
 
     const handleGoHome = () => {
+        onOpenChange(false);
         router.push('/');
     };
 

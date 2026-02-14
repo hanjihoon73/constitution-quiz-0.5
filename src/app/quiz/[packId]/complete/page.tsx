@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { MobileFrame } from '@/components/common';
 import { useAuth } from '@/components/auth';
-import { getUserQuizProgress, updateQuizpackStatistics, saveQuizpackRating, unlockNextQuizpack } from '@/lib/api/quiz';
+import { getUserQuizProgress, updateQuizpackStatistics, saveQuizpackRating, unlockNextQuizpack, resetUserQuizpack, getUserQuizpackId } from '@/lib/api/quiz';
 import { Star, Clock } from 'lucide-react';
 
 interface QuizResult {
@@ -102,6 +102,26 @@ export default function QuizCompletePage() {
     const handleGoHome = () => {
         handleSaveAndNavigate('home');
     };
+
+    // 결과보기 핸들러
+    const handleViewResults = useCallback(() => {
+        router.push(`/quiz/${packId}?mode=view`);
+    }, [packId, router]);
+
+    // 다시풀기 핸들러
+    const handleRestart = useCallback(async () => {
+        if (!dbUser?.id) return;
+
+        try {
+            const userQuizpackId = await getUserQuizpackId(dbUser.id, packId);
+            if (userQuizpackId) {
+                await resetUserQuizpack(userQuizpackId);
+            }
+            router.push(`/quiz/${packId}?restart=true`);
+        } catch (err) {
+            console.error('퀴즈팩 초기화 실패:', err);
+        }
+    }, [dbUser?.id, packId, router]);
 
     // 시간 포맷팅 (MM:SS)
     const formatTime = (seconds: number) => {
@@ -310,6 +330,45 @@ export default function QuizCompletePage() {
                 >
                     {isSaving ? '저장 중...' : '다음 퀴즈팩 시작'}
                 </button>
+
+                {/* 결과보기 + 다시풀기 버튼 */}
+                <div style={{ display: 'flex', gap: '8px' }}>
+                    <button
+                        onClick={handleViewResults}
+                        disabled={isSaving}
+                        style={{
+                            flex: 1,
+                            padding: '14px',
+                            backgroundColor: 'transparent',
+                            color: '#3b82f6',
+                            border: '1px solid #3b82f6',
+                            borderRadius: '12px',
+                            fontSize: '15px',
+                            fontWeight: '600',
+                            cursor: isSaving ? 'not-allowed' : 'pointer',
+                        }}
+                    >
+                        결과보기
+                    </button>
+                    <button
+                        onClick={handleRestart}
+                        disabled={isSaving}
+                        style={{
+                            flex: 1,
+                            padding: '14px',
+                            backgroundColor: 'transparent',
+                            color: '#f59e0b',
+                            border: '1px solid #f59e0b',
+                            borderRadius: '12px',
+                            fontSize: '15px',
+                            fontWeight: '600',
+                            cursor: isSaving ? 'not-allowed' : 'pointer',
+                        }}
+                    >
+                        다시풀기
+                    </button>
+                </div>
+
                 <button
                     onClick={handleGoHome}
                     disabled={isSaving}

@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, useRef, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/client';
 import type { User as DbUser } from '@/types/database';
@@ -21,6 +21,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const [session, setSession] = useState<Session | null>(null);
     const [dbUser, setDbUser] = useState<DbUser | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const isInitialized = useRef(false);
 
     const supabase = createClient();
 
@@ -78,6 +79,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 await fetchDbUser(session.user);
             }
 
+            isInitialized.current = true;
             setIsLoading(false);
         };
 
@@ -86,6 +88,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // 인증 상태 변경 리스너
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
             async (event, session) => {
+                // 초기화 완료 전 INITIAL_SESSION 이벤트는 무시 (initializeAuth에서 처리)
+                if (!isInitialized.current && event === 'INITIAL_SESSION') {
+                    return;
+                }
+
                 setSession(session);
                 setUser(session?.user ?? null);
 

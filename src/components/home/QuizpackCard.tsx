@@ -6,6 +6,9 @@ import { QuizpackWithStatus } from '@/lib/api/quizpacks';
 
 interface QuizpackCardProps {
     quizpack: QuizpackWithStatus;
+    onCompletedClick?: (quizpackId: number) => void;  // 완료된 퀴즈팩 클릭 콜백
+    onOpenedClick?: (quizpackId: number) => void;  // 열림 퀴즈팩 클릭 콜백
+    isCurrent?: boolean;  // 현재 풀어야 할 퀴즈팩 여부
 }
 
 /**
@@ -13,7 +16,7 @@ interface QuizpackCardProps {
  * - 상태별 스타일 적용
  * - 클릭 시 상태에 따른 동작
  */
-export function QuizpackCard({ quizpack }: QuizpackCardProps) {
+export function QuizpackCard({ quizpack, onCompletedClick, onOpenedClick, isCurrent }: QuizpackCardProps) {
     const router = useRouter();
 
     // 클릭 핸들러
@@ -23,13 +26,22 @@ export function QuizpackCard({ quizpack }: QuizpackCardProps) {
                 toast.info('순서대로 진행해 주세요.');
                 break;
             case 'opened':
-                router.push(`/quiz/${quizpack.id}`);
+                if (onOpenedClick) {
+                    onOpenedClick(quizpack.id);
+                } else {
+                    router.push(`/quiz/${quizpack.id}`);
+                }
                 break;
             case 'in_progress':
                 router.push(`/quiz/${quizpack.id}?resume=true`);
                 break;
             case 'completed':
-                router.push(`/quiz/${quizpack.id}`);
+                // 완료된 퀴즈팩은 콜백이 있으면 호출, 없으면 바로 진입
+                if (onCompletedClick) {
+                    onCompletedClick(quizpack.id);
+                } else {
+                    router.push(`/quiz/${quizpack.id}`);
+                }
                 break;
         }
     };
@@ -71,7 +83,9 @@ export function QuizpackCard({ quizpack }: QuizpackCardProps) {
                 backgroundColor: quizpack.status === 'closed' ? '#f9fafb' :
                     quizpack.status === 'in_progress' ? '#fffbeb' :
                         quizpack.status === 'completed' ? '#f0fdf4' : '#ffffff',
-                border: `1px solid ${quizpack.status === 'closed' ? '#e5e7eb' :
+                border: isCurrent
+                    ? '2px solid #f59e0b'
+                    : `1px solid ${quizpack.status === 'closed' ? '#e5e7eb' :
                         quizpack.status === 'in_progress' ? '#fcd34d' :
                             quizpack.status === 'completed' ? '#86efac' : '#e5e7eb'
                     }`,
@@ -80,10 +94,12 @@ export function QuizpackCard({ quizpack }: QuizpackCardProps) {
                 marginBottom: '12px',
                 cursor: quizpack.status === 'closed' ? 'not-allowed' : 'pointer',
                 opacity: quizpack.status === 'closed' ? 0.6 : 1,
-                boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+                boxShadow: isCurrent
+                    ? '0 0 0 3px rgba(245, 158, 11, 0.2), 0 4px 12px rgba(245, 158, 11, 0.15)'
+                    : '0 2px 8px rgba(0,0,0,0.06)',
                 transition: 'all 0.2s ease-out',
             }}
-            className={`${getStatusStyles()} active:scale-[0.98]`}
+            className={`${getStatusStyles()} active:scale-[0.98] ${isCurrent ? 'animate-pulse-subtle' : ''}`}
         >
             {/* 상단: 순서 번호 + 상태 아이콘 */}
             <div style={{

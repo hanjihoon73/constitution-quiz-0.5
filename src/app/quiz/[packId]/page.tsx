@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useQuiz } from '@/hooks/useQuiz';
 import {
     QuizLayout,
@@ -14,7 +14,9 @@ import { Loading } from '@/components/common';
 export default function QuizPage() {
     const params = useParams();
     const router = useRouter();
+    const searchParams = useSearchParams();
     const packId = Number(params.packId);
+    const isRestart = searchParams.get('restart') === 'true';
 
     const {
         packData,
@@ -35,7 +37,7 @@ export default function QuizPage() {
         toggleHint,
         saveProgress,
         completeQuizPack,
-    } = useQuiz(packId);
+    } = useQuiz(packId, { isRestart });
 
     // 정답 확인 핸들러
     const handleCheckAnswer = useCallback(() => {
@@ -154,4 +156,3 @@ export default function QuizPage() {
         </QuizLayout>
     );
 }
-

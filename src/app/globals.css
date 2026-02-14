@@ -316,3 +316,20 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+/* ========================================
+   현재 퀴즈팩 강조 애니메이션
+   ======================================== */
+
+@keyframes pulse-subtle {
+  0%, 100% {
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2), 0 4px 12px rgba(245, 158, 11, 0.15);
+  }
+  50% {
+    box-shadow: 0 0 0 5px rgba(245, 158, 11, 0.1), 0 4px 16px rgba(245, 158, 11, 0.25);
+  }
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 2s ease-in-out infinite;
+}
