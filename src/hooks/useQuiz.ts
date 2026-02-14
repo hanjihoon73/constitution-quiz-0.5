@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Quiz, QuizPackData, getQuizzesByPackId, saveQuizProgress, getUserQuizProgress, saveUserQuizAnswer, getUserQuizpackId, getUserPreviousAnswers, updateUserQuizpackCurrentOrder, initializeUserQuizpack, resetUserQuizpack } from '@/lib/api/quiz';
+import { seededShuffle } from '@/lib/utils/seededShuffle';
 import { useAuth } from '@/components/auth';
 
 // 사용자의 답안 타입
@@ -102,6 +103,16 @@ export function useQuiz(packId: number, options: UseQuizOptions = {}): UseQuizRe
                     if (userQuizpackId) {
                         // 진행 상태 조회 (초기화 후 최신 상태)
                         const progress = await getUserQuizProgress(dbUser.id, packId);
+
+                        // 보기 셔플: session_number 기반으로 매 세션마다 다른 순서
+                        const sessionNumber = progress?.session_number || 1;
+                        data.quizzes = data.quizzes.map(quiz => ({
+                            ...quiz,
+                            choices: seededShuffle(
+                                quiz.choices,
+                                `${userQuizpackId}-${sessionNumber}-${quiz.id}`
+                            ),
+                        }));
 
                         // 다시풀기 모드가 아닐 때만 이전 답변 복원
                         if (!isRestart) {

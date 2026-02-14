@@ -15,7 +15,7 @@ interface MultipleChoiceProps {
 export function MultipleChoice({ choices, selectedIds, onSelect, isChecked }: MultipleChoiceProps) {
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {choices.map((choice) => {
+            {choices.map((choice, index) => {
                 const isSelected = selectedIds.includes(choice.id);
 
                 // 상태에 따른 스타일
@@ -73,7 +73,7 @@ export function MultipleChoice({ choices, selectedIds, onSelect, isChecked }: Mu
                                 flexShrink: 0,
                             }}
                         >
-                            {choice.choiceOrder}
+                            {index + 1}
                         </span>
 
                         {/* 보기 텍스트 */}
