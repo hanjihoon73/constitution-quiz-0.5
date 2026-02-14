@@ -785,7 +785,7 @@ export async function resetUserQuizpack(userQuizpackId: number) {
             correct_rate: null,
             started_at: new Date().toISOString(),
             last_played_at: new Date().toISOString(),
-            completed_at: null,
+            // completed_at은 유지 - 이전 완료 기록을 보존하여 후속 퀴즈팩 상태 결정에 사용
         })
         .eq('id', userQuizpackId);
 

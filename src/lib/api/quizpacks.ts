@@ -94,12 +94,14 @@ export async function getQuizpacksWithStatus(userId: number): Promise<QuizpackWi
             status = 'opened';
         } else {
             // 이전 퀴즈팩 완료 여부 확인
+            // 현재 completed이거나, 한 번이라도 완료한 적 있으면(completed_at 존재) opened로 표시
+            // → 다시풀기로 in_progress가 되어도 후속 퀴즈팩은 opened 유지
             const prevQuizpackId = (loadmapData[index - 1]?.quizpacks as unknown as { id: number })?.id;
             const prevUserQuizpack = userProgress?.find(
                 (p) => p.quizpack_id === prevQuizpackId
             );
 
-            if (prevUserQuizpack?.status === 'completed') {
+            if (prevUserQuizpack?.status === 'completed' || prevUserQuizpack?.completed_at) {
                 status = 'opened';
             }
         }
