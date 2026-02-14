@@ -10,13 +10,14 @@ import { Button } from '@/components/ui/button';
 
 interface RestartOptionDialogProps {
     open: boolean;
+    onClose: () => void;
     onViewResults: () => void;
     onRestart: () => void;
 }
 
-export function RestartOptionDialog({ open, onViewResults, onRestart }: RestartOptionDialogProps) {
+export function RestartOptionDialog({ open, onClose, onViewResults, onRestart }: RestartOptionDialogProps) {
     return (
-        <Dialog open={open}>
+        <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) onClose(); }}>
             <DialogContent className="sm:max-w-md bg-white rounded-2xl border-none shadow-xl p-6">
                 <DialogHeader className="flex flex-col items-center gap-4 text-center">
                     <div className="text-6xl">📋</div>

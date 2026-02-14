@@ -175,6 +175,7 @@ export default function Home() {
       {/* 완료된 퀴즈팩 재시작 옵션 팝업 (홈에서 표시) */}
       <RestartOptionDialog
         open={showRestartDialog}
+        onClose={() => setShowRestartDialog(false)}
         onViewResults={handleViewResults}
         onRestart={handleRestart}
       />

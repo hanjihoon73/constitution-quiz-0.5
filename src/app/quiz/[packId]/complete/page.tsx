@@ -84,7 +84,14 @@ export default function QuizCompletePage() {
                     router.push('/?allClear=true');
                 }
             } else {
-                router.push('/');
+                // 홈으로 이동 시에도 마지막 퀴즈팩 여부 확인
+                const nextPackId = await unlockNextQuizpack(dbUser.id, packId);
+                if (!nextPackId) {
+                    // 마지막 퀴즈팩이었으면 allClear 팝업 표시
+                    router.push('/?allClear=true');
+                } else {
+                    router.push('/');
+                }
             }
         } catch (error) {
             console.error('저장 에러:', error);

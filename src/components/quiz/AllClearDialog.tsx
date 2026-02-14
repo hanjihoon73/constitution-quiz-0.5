@@ -1,6 +1,5 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
 import {
     Dialog,
     DialogContent,
@@ -17,25 +16,25 @@ interface AllClearDialogProps {
 }
 
 export function AllClearDialog({ open, onOpenChange }: AllClearDialogProps) {
-    const router = useRouter();
     const { dbUser } = useAuth();
 
     // 닉네임 기본값 처리
     const nickname = dbUser?.nickname || '사용자';
 
-    const handleGoHome = () => {
+    const handleConfirm = () => {
         onOpenChange(false);
-        router.push('/');
     };
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-md bg-white rounded-2xl border-none shadow-xl">
+            <DialogContent
+                className="sm:max-w-md bg-white rounded-2xl border-none shadow-xl"
+                showCloseButton={false}
+            >
                 <DialogHeader className="flex flex-col items-center gap-6 text-center pt-8">
-                    {/* 트로피 아이콘 (이미지와 유사한 스타일) */}
+                    {/* 트로피 아이콘 */}
                     <div className="relative">
                         <div className="text-8xl drop-shadow-md filter">🏆</div>
-                        {/* 반짝임 효과 등을 추가할 수 있음 */}
                     </div>
 
                     <DialogTitle className="text-2xl font-bold text-gray-900 mt-2">
@@ -43,9 +42,6 @@ export function AllClearDialog({ open, onOpenChange }: AllClearDialogProps) {
                     </DialogTitle>
 
                     <div className="text-base text-gray-600 leading-relaxed space-y-2">
-                        <p>
-                            모든 퀴즈팩을 완료하셨습니다!
-                        </p>
                         <p>
                             대한민국의 헌법을 마스터한 <span className="font-bold text-[#f59e0b]">{nickname}</span>님을<br />
                             <span className="font-bold text-gray-900">대법관으로 임명합니다.</span>
@@ -61,7 +57,7 @@ export function AllClearDialog({ open, onOpenChange }: AllClearDialogProps) {
                     <Button
                         type="button"
                         className="w-full bg-[#f59e0b] hover:bg-[#d97706] text-white font-bold py-3 text-lg rounded-xl shadow-md transition-all active:scale-95"
-                        onClick={handleGoHome}
+                        onClick={handleConfirm}
                     >
                         확인
                     </Button>
