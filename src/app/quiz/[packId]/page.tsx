@@ -50,8 +50,14 @@ export default function QuizPage() {
 
     // 퀴즈 완료 핸들러
     const handleComplete = useCallback(async () => {
-        await completeQuizPack();
-        router.push(`/quiz/${packId}/complete`);
+        console.log('[handleComplete] 퀴즈 완료 버튼 클릭됨');
+        try {
+            await completeQuizPack();
+            console.log('[handleComplete] completeQuizPack 성공');
+            router.push(`/quiz/${packId}/complete`);
+        } catch (err) {
+            console.error('[handleComplete] 에러:', err);
+        }
     }, [completeQuizPack, packId, router]);
 
     // 나가기 핸들러 (진행 상태 저장)
