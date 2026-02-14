@@ -190,6 +190,7 @@ export function useQuiz(packId: number, options: UseQuizOptions = {}): UseQuizRe
 
         return () => {
             cancelled = true;
+            isLoadingRef.current = false;
         };
     }, [packId, dbUser?.id, authLoading]);
 
