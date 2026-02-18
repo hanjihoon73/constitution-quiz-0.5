@@ -97,6 +97,11 @@ export default function LoginPage() {
                     <span className="underline">개인정보처리방침</span>에<br />
                     동의하는 것으로 간주됩니다.
                 </p>
+
+                {/* 저작권 문구 */}
+                <p className="mt-6 text-center text-xs text-gray-300">
+                    ⓒ 2025 COGNITY. All rights reserved.
+                </p>
             </div>
         </MobileFrame>
     );
