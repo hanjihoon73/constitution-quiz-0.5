@@ -15,19 +15,21 @@ interface MobileFrameProps {
  */
 export function MobileFrame({ children, className = '' }: MobileFrameProps) {
     return (
-        <div className="min-h-[100dvh] bg-gray-100">
+        <div className="min-h-[100dvh] bg-muted/20 flex justify-center">
             <div
                 className={`
-          mobile-frame
-          mx-auto 
-          max-w-[480px] 
-          min-h-[100dvh] 
-          bg-white 
-          relative
-          flex
-          flex-col
-          ${className}
-        `}
+                    mobile-frame
+                    w-full
+                    max-w-[480px] 
+                    min-h-[100dvh] 
+                    bg-background 
+                    text-foreground
+                    relative
+                    flex
+                    flex-col
+                    shadow-2xl
+                    ${className}
+                `}
             >
                 {children}
             </div>

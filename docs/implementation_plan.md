@@ -1,7 +1,7 @@
 # 모두의 헌법 퀴즈 - 개발 계획서 (Implementation Plan)
 
-> **버전**: v1.0  
-> **작성일**: 2026-01-18  
+> **버전**: v1.1  
+> **작성일**: 2026-01-18 (최종 수정: 2026-02-18)  
 > **PRD 기준**: constitution-quiz-prd-v0.5.md  
 > **디자인 참고**: design-reference.png
 
@@ -40,96 +40,51 @@
 constitution-quiz-0.5/
 ├── src/
 │   ├── app/                       # Next.js App Router (페이지)
-│   │   ├── (auth)/                # 인증 관련 페이지 그룹
-│   │   │   ├── login/             # 로그인 페이지
-│   │   │   │   └── page.tsx
-│   │   │   └── onboarding/        # 온보딩 (닉네임 설정)
-│   │   │       └── page.tsx
-│   │   ├── (main)/                # 메인 페이지 그룹 (인증 필요)
-│   │   │   ├── layout.tsx         # 공통 레이아웃 (헤더)
-│   │   │   ├── page.tsx           # 홈 (퀴즈팩 목록)
-│   │   │   ├── quiz/              # 퀴즈 관련
-│   │   │   │   └── [userQuizpackId]/
-│   │   │   │       ├── page.tsx   # 퀴즈 화면
-│   │   │   │       └── complete/
-│   │   │   │           └── page.tsx  # 완료 화면
-│   │   │   ├── profile/           # 마이페이지
-│   │   │   │   └── page.tsx
-│   │   │   └── support/           # 고객센터
-│   │   │       └── page.tsx
-│   │   ├── api/                   # API Routes
-│   │   │   ├── auth/              # 인증 관련
-│   │   │   ├── users/             # 사용자 관련
-│   │   │   ├── quizpacks/         # 퀴즈팩 관련
-│   │   │   ├── user-quizpacks/    # 사용자-퀴즈팩 세션
-│   │   │   └── notices/           # 공지사항
+│   │   ├── auth/
+│   │   │   └── callback/
+│   │   │       └── route.ts       # OAuth 콜백 처리
+│   │   ├── login/
+│   │   │   └── page.tsx           # 로그인 페이지
+│   │   ├── onboarding/
+│   │   │   └── page.tsx           # 온보딩 (닉네임 설정)
+│   │   ├── quiz/
+│   │   │   └── [packId]/
+│   │   │       ├── page.tsx       # 퀴즈 풀이 화면
+│   │   │       └── complete/
+│   │   │           └── page.tsx   # 퀴즈팩 완료 화면
+│   │   ├── profile/
+│   │   │   └── page.tsx           # 마이페이지
+│   │   ├── api/
+│   │   │   └── user/
+│   │   │       └── delete/
+│   │   │           └── route.ts   # 회원탈퇴 API Route
+│   │   ├── page.tsx               # 홈 (퀴즈팩 목록)
 │   │   ├── layout.tsx             # 루트 레이아웃
 │   │   └── globals.css            # 글로벌 스타일
 │   │
 │   ├── components/                # 재사용 컴포넌트
-│   │   ├── common/                # 공통 컴포넌트
-│   │   │   ├── MobileFrame.tsx    # 모바일 프레임 컨테이너
-│   │   │   ├── Header.tsx         # 헤더 (BI + 프로필)
-│   │   │   ├── Toast.tsx          # 토스트 알림
-│   │   │   └── Loading.tsx        # 로딩 스피너
-│   │   ├── auth/                  # 인증 관련
-│   │   │   ├── LoginForm.tsx      # 로그인 폼
-│   │   │   └── NicknameForm.tsx   # 닉네임 입력 폼
-│   │   ├── home/                  # 홈 화면
-│   │   │   └── QuizpackCard.tsx   # 퀴즈팩 카드
-│   │   ├── quiz/                  # 퀴즈 화면
-│   │   │   ├── QuizNavigation.tsx # 퀴즈 네비게이션
-│   │   │   ├── QuizInfo.tsx       # 퀴즈 정보 (장/조, 난이도)
-│   │   │   ├── QuizQuestion.tsx   # 질문/지문 영역
-│   │   │   ├── MultipleChoice.tsx # 4지선다 보기
-│   │   │   ├── TrueFalse.tsx      # OX 보기
-│   │   │   ├── ChoiceBlank.tsx    # 빈칸채우기 보기
-│   │   │   ├── AnswerResult.tsx   # 정오답 결과 표시
-│   │   │   └── QuizExitModal.tsx  # 중단 확인 팝업
-│   │   ├── profile/               # 마이페이지
-│   │   │   └── ProfileCard.tsx    # 프로필 카드
+│   │   ├── common/                # 공통 (MobileFrame, Header)
+│   │   ├── auth/                  # 인증 (AuthProvider, LogoutButton)
+│   │   ├── home/                  # 홈 (QuizpackCard, QuizpackList)
+│   │   ├── quiz/                  # 퀴즈 (각 유형 컴포넌트, 다이얼로그)
+│   │   ├── profile/               # 마이페이지 (WithdrawDialog)
 │   │   └── ui/                    # shadcn/ui 컴포넌트
-│   │       └── (자동 생성)
 │   │
 │   ├── hooks/                     # 커스텀 훅
-│   │   ├── useAuth.ts             # 인증 상태 관리
-│   │   ├── useUser.ts             # 사용자 정보
-│   │   ├── useQuizpacks.ts        # 퀴즈팩 목록
-│   │   ├── useQuiz.ts             # 퀴즈 풀이 로직
-│   │   └── useToast.ts            # 토스트 알림
+│   │   └── useQuizpacks.ts        # 퀴즈팩 목록 조회
 │   │
 │   ├── lib/                       # 라이브러리/유틸리티
-│   │   ├── supabase/              # Supabase 설정
-│   │   │   ├── client.ts          # 클라이언트 설정
-│   │   │   ├── server.ts          # 서버 설정
-│   │   │   └── middleware.ts      # 미들웨어
-│   │   ├── utils/                 # 유틸리티 함수
-│   │   │   ├── seededShuffle.ts   # 시드 기반 셔플
-│   │   │   └── formatTime.ts      # 시간 포맷
-│   │   └── constants/             # 상수
-│   │       └── quiz.ts            # 퀴즈 관련 상수
+│   │   ├── supabase/              # Supabase 설정 (client, server, middleware)
+│   │   ├── api/                   # API 함수 (quiz.ts, user.ts)
+│   │   └── utils/                 # 유틸리티 (seededShuffle 등)
 │   │
 │   └── types/                     # TypeScript 타입 정의
-│       ├── database.ts            # Supabase 스키마 타입
-│       ├── quiz.ts                # 퀴즈 관련 타입
-│       └── user.ts                # 사용자 관련 타입
+│       └── database.ts            # Supabase 스키마 타입
 │
-├── public/                        # 정적 파일
-│   ├── sounds/                    # 효과음
-│   │   ├── correct.wav
-│   │   └── incorrect.wav
-│   └── images/                    # 이미지
-│       ├── correct-overlay.png
-│       └── incorrect-overlay.png
-│
+├── public/                        # 정적 파일 (BI, 효과음 등)
 ├── docs/                          # 문서
-│   ├── constitution-quiz-prd-v0.5.md
-│   ├── implementation_plan.md
-│   └── task.md
-│
 ├── .env.local                     # 환경변수 (git 제외)
-├── .env.example                   # 환경변수 예시
-└── design-reference.png           # 디자인 참고 이미지
+└── middleware.ts                   # Next.js 미들웨어 (인증)
 ```
 
 ---
@@ -294,7 +249,9 @@ const nicknameRegex = /^[가-힣a-zA-Z0-9]{4,20}$/;
 
 ---
 
-### Phase 9: 고객센터 (예상: 4-5시간)
+### Phase 9: 고객센터
+
+> ⚠️ **v0.5에서는 제외** - 향후 버전에서 구현 예정
 
 #### 공지사항 기능
 - 목록: 유형, 제목, 조회수, 작성일
@@ -386,7 +343,8 @@ const nicknameRegex = /^[가-힣a-zA-Z0-9]{4,20}$/;
 | 버전 | 일자 | 변경 내용 |
 |------|------|----------|
 | v1.0 | 2026-01-18 | 초기 개발 계획서 작성 |
+| v1.1 | 2026-02-18 | 실제 폴더 구조 반영, Phase 9 (고객센터) v0.5 제외 표시 |
 
 ---
 
-> **다음 단계**: 이 계획서에 대한 검토가 완료되면 Phase 1(프로젝트 초기 설정)부터 순차적으로 개발을 진행합니다.
+> **현재 상태**: Phase 1~8 개발 완료, Phase 9 (고객센터) v0.5 제외. Phase 10 (UI/UX 개선, 테스트, 최적화) 진행 중.
