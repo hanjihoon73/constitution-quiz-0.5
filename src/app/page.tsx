@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { Suspense, useEffect, useState, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { MobileFrame, Header } from '@/components/common';
 import { QuizpackList } from '@/components/home';
@@ -17,6 +17,21 @@ import {
 } from '@/lib/api/quiz';
 
 export default function Home() {
+  return (
+    <Suspense fallback={
+      <MobileFrame>
+        <Header />
+        <div className="flex flex-1 items-center justify-center">
+          <div className="text-gray-400">로딩 중...</div>
+        </div>
+      </MobileFrame>
+    }>
+      <HomeContent />
+    </Suspense>
+  );
+}
+
+function HomeContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, dbUser, isLoading: authLoading } = useAuth();
