@@ -9,6 +9,7 @@ import { useQuizpacks } from '@/hooks/useQuizpacks';
 import { AllClearDialog } from '@/components/quiz/AllClearDialog';
 import { RestartOptionDialog } from '@/components/quiz/RestartOptionDialog';
 import { AbortConfirmDialog } from '@/components/quiz/AbortConfirmDialog';
+import { toast } from 'sonner';
 import {
   resetUserQuizpack,
   getUserQuizpackId,
@@ -62,6 +63,14 @@ function HomeContent() {
       setShowAllClearDialog(true);
     }
   }, [searchParams]);
+
+  // 환영 파라미터 확인 (온보딩 직후)
+  useEffect(() => {
+    if (searchParams.get('welcome') === 'true') {
+      toast.success('환영합니다! 🎉', { duration: 2000 });
+      router.replace('/', { scroll: false });
+    }
+  }, [searchParams, router]);
 
   const handleAllClearDialogChange = (open: boolean) => {
     setShowAllClearDialog(open);

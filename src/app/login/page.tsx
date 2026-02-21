@@ -27,7 +27,7 @@ export default function LoginPage() {
     };
 
     return (
-        <MobileFrame className="bg-background text-foreground">
+        <MobileFrame className="bg-background text-foreground animate-in fade-in duration-500">
             <div className="flex flex-1 flex-col relative min-h-full">
                 {/* 메인 컨텐츠 영역 (중앙 정렬) */}
                 <div className="flex-1 flex flex-col items-center justify-center px-6">

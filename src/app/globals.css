@@ -339,3 +339,25 @@ body {
 .delay-700 {
   animation-delay: 700ms;
 }
+
+/* ========================================
+   토스트 팝업 정렬 및 여백 커스텀
+   ======================================== */
+.toaster [data-sonner-toast] {
+  padding-left: 20px !important;
+  padding-right: 20px !important;
+  justify-content: center !important;
+}
+
+/* 토스트 내부 컨텐츠가 가로 전체를 사용하고 중앙 정렬되도록 보장 */
+.toaster [data-sonner-toast] [data-content] {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* 사용하지 않는 아이콘 영역 강제 숨김 */
+.toaster [data-sonner-toast] [data-icon] {
+  display: none !important;
+}

@@ -31,6 +31,72 @@ export default function OnboardingPage() {
         }
     }, [isLoading, dbUser, router]);
 
+    // 브라우저 뒤로가기(popstate) 감지하여 로그아웃 처리
+    useEffect(() => {
+        const handlePopstate = async () => {
+            // 현재 히스토리 상태 강제 조작 (앞으로 가기 방지)
+            window.history.pushState(null, '', window.location.href);
+
+            try {
+                // 로그아웃 처리
+                await supabase.auth.signOut();
+
+                let countdown = 2;
+
+                const renderToastContent = (count: number) => (
+                    <div className="flex flex-row items-center justify-center w-full text-center gap-1.5 min-w-0">
+                        <span className="font-normal text-[13px] whitespace-nowrap">온보딩을 취소하고, 안전하게 로그아웃합니다.</span>
+                        <span className="font-normal text-[13px] whitespace-nowrap ml-1">({count}초)</span>
+                    </div>
+                );
+
+                const toastId = toast(renderToastContent(countdown), {
+                    duration: 10000,
+                });
+
+                const interval = setInterval(() => {
+                    countdown -= 1;
+
+                    if (countdown >= 0) {
+                        toast(renderToastContent(countdown), {
+                            id: toastId,
+                            duration: 10000,
+                        });
+                    }
+
+                    if (countdown === 0) {
+                        clearInterval(interval);
+
+                        // 0초를 잠깐(500ms) 보여준 후 토스트를 닫기 시작
+                        setTimeout(() => {
+                            toast.dismiss(toastId);
+
+                            // 페이드아웃 애니메이션(약 500ms) 대기 후 로그인 페이지로 실제 이동
+                            setTimeout(() => {
+                                window.location.replace('/login');
+                            }, 500);
+                        }, 500);
+                    }
+                }, 1000);
+
+            } catch (error) {
+                console.error('로그아웃 중 에러 발생:', error);
+                toast.error('로그아웃 중 오류가 발생했습니다. 강제로 이동합니다.');
+                setTimeout(() => {
+                    window.location.replace('/login');
+                }, 1500);
+            }
+        };
+
+        // 컴포넌트 마운트 시 현재 상태 push (사용자가 뒤로가기 누를 수 있도록 스택 1개 추가)
+        window.history.pushState(null, '', window.location.href);
+        window.addEventListener('popstate', handlePopstate);
+
+        return () => {
+            window.removeEventListener('popstate', handlePopstate);
+        };
+    }, [supabase.auth]);
+
     // 닉네임 유효성 검사
     const validateNickname = (value: string) => {
         if (!value) {
@@ -51,17 +117,14 @@ export default function OnboardingPage() {
     // 닉네임 중복 검사
     const checkDuplicate = async (value: string) => {
         const { data, error } = await supabase
-            .from('users')
-            .select('nickname')
-            .eq('nickname', value)
-            .maybeSingle();
+            .rpc('check_nickname_exists', { check_nickname: value });
 
         if (error) {
             console.error('중복 검사 에러:', error);
             return false;
         }
 
-        return data !== null;
+        return data === true;
     };
 
     // 닉네임 입력 핸들러
@@ -141,8 +204,7 @@ export default function OnboardingPage() {
             }
 
             // 저장 성공! 전체 페이지를 새로고침하여 AuthProvider가 dbUser를 확실히 로드하도록 함
-            toast.success('환영합니다! 🎉');
-            window.location.href = '/';
+            window.location.href = '/?welcome=true';
         } catch (err) {
             console.error('저장 에러:', err);
             toast.error('저장 중 오류가 발생했습니다.');
