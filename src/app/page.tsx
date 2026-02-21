@@ -3,13 +3,12 @@
 import { Suspense, useEffect, useState, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { MobileFrame, Header } from '@/components/common';
-import { QuizpackList } from '@/components/home';
+import { QuizpackList, WelcomeDialog } from '@/components/home';
 import { useAuth } from '@/components/auth';
 import { useQuizpacks } from '@/hooks/useQuizpacks';
 import { AllClearDialog } from '@/components/quiz/AllClearDialog';
 import { RestartOptionDialog } from '@/components/quiz/RestartOptionDialog';
 import { AbortConfirmDialog } from '@/components/quiz/AbortConfirmDialog';
-import { toast } from 'sonner';
 import {
   resetUserQuizpack,
   getUserQuizpackId,
@@ -39,6 +38,7 @@ function HomeContent() {
   const { quizpacks, isLoading: quizpacksLoading, error } = useQuizpacks();
 
   const [showAllClearDialog, setShowAllClearDialog] = useState(false);
+  const [showWelcomeDialog, setShowWelcomeDialog] = useState(false);
   const [showRestartDialog, setShowRestartDialog] = useState(false);
   const [showAbortDialog, setShowAbortDialog] = useState(false);
   const [selectedPackId, setSelectedPackId] = useState<number | null>(null);
@@ -67,7 +67,7 @@ function HomeContent() {
   // 환영 파라미터 확인 (온보딩 직후)
   useEffect(() => {
     if (searchParams.get('welcome') === 'true') {
-      toast.success('환영합니다! 🎉', { duration: 2000 });
+      setShowWelcomeDialog(true);
       router.replace('/', { scroll: false });
     }
   }, [searchParams, router]);
@@ -194,6 +194,12 @@ function HomeContent() {
       <AllClearDialog
         open={showAllClearDialog}
         onOpenChange={handleAllClearDialogChange}
+      />
+
+      {/* 온보딩 후 1회성 웰컴 다이얼로그 */}
+      <WelcomeDialog
+        open={showWelcomeDialog}
+        onOpenChange={setShowWelcomeDialog}
       />
 
       {/* 완료된 퀴즈팩 재시작 옵션 팝업 (홈에서 표시) */}
