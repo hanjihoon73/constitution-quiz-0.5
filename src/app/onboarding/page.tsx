@@ -22,6 +22,7 @@ export default function OnboardingPage() {
     const [isChecking, setIsChecking] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState('');
+    const [isValid, setIsValid] = useState(false);
 
     // 이미 등록된 사용자는 홈으로 리다이렉트
     useEffect(() => {
@@ -67,29 +68,46 @@ export default function OnboardingPage() {
     const handleNicknameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
         setNickname(value);
-        setError(validateNickname(value));
+        setIsValid(false);
+
+        const syntaxError = validateNickname(value);
+        if (syntaxError) {
+            setError(syntaxError);
+        } else {
+            setError('');
+        }
     };
+
+    // 닉네임 실시간 중복 검사 (디바운스 적용)
+    useEffect(() => {
+        // 문법적 오류가 있거나 빈 문자열이면 중복 검사 실행 안 함
+        if (!nickname || validateNickname(nickname) !== '') {
+            setIsValid(false);
+            return;
+        }
+
+        // 300ms 후에 중복 검사 API 호출
+        const timer = setTimeout(async () => {
+            setIsChecking(true);
+            const isDuplicate = await checkDuplicate(nickname);
+
+            if (isDuplicate) {
+                setError('이미 사용 중인 닉네임입니다.');
+                setIsValid(false);
+            } else {
+                setError('');
+                setIsValid(true);
+            }
+            setIsChecking(false);
+        }, 300);
+
+        return () => clearTimeout(timer);
+    }, [nickname, supabase]);
 
     // 닉네임 확정 핸들러
     const handleSubmit = async () => {
-        // 유효성 검사
-        const validationError = validateNickname(nickname);
-        if (validationError) {
-            setError(validationError);
-            return;
-        }
+        if (!isValid) return; // 유효하지 않으면 제출 방지
 
-        setIsChecking(true);
-
-        // 중복 검사
-        const isDuplicate = await checkDuplicate(nickname);
-        if (isDuplicate) {
-            setError('이미 사용 중인 닉네임입니다.');
-            setIsChecking(false);
-            return;
-        }
-
-        setIsChecking(false);
         setIsSubmitting(true);
 
         try {
@@ -112,42 +130,21 @@ export default function OnboardingPage() {
                 role: 'user' as const,
             };
 
-            console.log('[온보딩] Insert payload:', insertPayload);
-
             const { data, error: insertError } = await supabase
                 .from('users')
                 .insert(insertPayload)
                 .select();
 
-            console.log('[온보딩] Insert 응답:', { data, error: insertError });
-
             if (insertError) {
-                console.error('[온보딩] Insert 에러 발생!');
-                console.error('- message:', insertError.message);
-                console.error('- code:', insertError.code);
-                console.error('- details:', insertError.details);
-                console.error('- hint:', insertError.hint);
+                console.error('[온보딩] Insert 에러 발생!', insertError);
                 throw insertError;
             }
 
             // 저장 성공! 전체 페이지를 새로고침하여 AuthProvider가 dbUser를 확실히 로드하도록 함
-            console.log('[온보딩] 저장 성공! 홈으로 이동');
             toast.success('환영합니다! 🎉');
-
-            // router.push 대신 window.location.href 사용 (전체 페이지 새로고침)
-            // 이렇게 해야 AuthProvider가 완전히 새로 초기화되어 dbUser를 가져옴
             window.location.href = '/';
         } catch (err) {
             console.error('저장 에러:', err);
-            console.error('에러 상세:', JSON.stringify(err, null, 2));
-
-            // Supabase 에러인 경우 더 자세한 정보 출력
-            if (err && typeof err === 'object' && 'message' in err) {
-                console.error('에러 메시지:', (err as any).message);
-                console.error('에러 코드:', (err as any).code);
-                console.error('에러 세부:', (err as any).details);
-            }
-
             toast.error('저장 중 오류가 발생했습니다.');
         } finally {
             setIsSubmitting(false);
@@ -155,54 +152,73 @@ export default function OnboardingPage() {
     };
 
     return (
-        <MobileFrame className="bg-gradient-to-b from-white to-gray-50">
-            <div className="flex flex-1 flex-col items-center justify-center px-6">
-                {/* BI 로고 */}
-                <div className="mb-8">
-                    <Image
-                        src="/bi-constitution-quiz-symbol.svg"
-                        alt="모두의 헌법"
-                        width={80}
-                        height={80}
-                        priority
-                    />
-                </div>
-
-                {/* 환영 메시지 */}
-                <h1 className="mb-2 text-2xl font-bold text-primary">
-                    환영합니다!
-                </h1>
-                <p className="mb-8 text-center text-gray-500">
-                    퀴즈에서 사용할 닉네임을<br />입력해주세요.
-                </p>
-
-                {/* 닉네임 입력 폼 */}
-                <div className="w-full max-w-[320px] space-y-4">
-                    <div>
-                        <Input
-                            type="text"
-                            placeholder="닉네임 (2-10자)"
-                            value={nickname}
-                            onChange={handleNicknameChange}
-                            maxLength={10}
-                            className={`h-12 rounded-xl text-center text-lg ${error ? 'border-red-500 focus-visible:ring-red-500' : ''
-                                }`}
+        <MobileFrame className="bg-background text-foreground">
+            <div className="flex flex-1 flex-col relative min-h-full">
+                {/* 메인 컨텐츠 영역 (중앙 정렬) */}
+                <div className="flex-1 flex flex-col items-center justify-center px-6">
+                    {/* BI 로고 영역 */}
+                    <div className="flex flex-col items-center">
+                        <Image
+                            src="/bi-constitution-quiz-vertical.svg"
+                            alt="모두의 헌법"
+                            width={180}
+                            height={120}
+                            priority
                         />
-                        {error && (
-                            <p className="mt-2 text-center text-sm text-red-500">{error}</p>
-                        )}
-                        <p className="mt-2 text-center text-xs text-gray-400">
-                            한글, 영문, 숫자 사용 가능
-                        </p>
                     </div>
 
-                    <Button
-                        onClick={handleSubmit}
-                        disabled={!nickname || !!error || isChecking || isSubmitting}
-                        className="h-12 w-full rounded-xl bg-secondary text-white font-semibold hover:bg-secondary/90"
-                    >
-                        {isChecking ? '확인 중...' : isSubmitting ? '저장 중...' : '시작하기'}
-                    </Button>
+                    {/* Spacing 1 (로고와 환영 메시지 사이) */}
+                    <div className="h-8" />
+
+                    {/* 환영 메시지 */}
+                    <p className="text-center text-muted-foreground animate-fade-in-up delay-100">
+                        환영합니다!<br />
+                        사용하실 닉네임을 입력해주세요.
+                    </p>
+
+                    {/* Spacing 2 (메시지와 폼 사이) */}
+                    <div className="h-8" />
+
+                    {/* 닉네임 입력 폼 */}
+                    <div className="w-full max-w-[320px] space-y-4 animate-fade-in-up delay-200">
+                        <div>
+                            <Input
+                                type="text"
+                                placeholder="닉네임 (2-10자)"
+                                value={nickname}
+                                onChange={handleNicknameChange}
+                                maxLength={10}
+                                className={`h-12 rounded-xl text-center text-lg !ring-0 transition-colors duration-200 ${error
+                                    ? 'border-gray-200 focus-visible:border-gray-400 text-gray-600'
+                                    : isValid
+                                        ? 'border-gray-400 focus-visible:border-gray-400 text-gray-600'
+                                        : 'border-input focus-visible:border-gray-400'
+                                    }`}
+                            />
+                            {error && (
+                                <p className="mt-2 text-center text-xs text-red-500">{error}</p>
+                            )}
+                            {isValid && !error && (
+                                <p className="mt-2 text-center text-xs text-green-600">사용 가능한 닉네임입니다!</p>
+                            )}
+                            {!error && !isValid && (
+                                <p className="mt-2 text-center text-xs text-gray-400">
+                                    한글, 영문, 숫자 사용 가능
+                                </p>
+                            )}
+                        </div>
+
+                        <Button
+                            onClick={handleSubmit}
+                            disabled={!isValid || isSubmitting}
+                            className={`h-12 w-full rounded-xl font-semibold transition-all duration-200 ${isValid && !isSubmitting
+                                ? 'bg-[#2D2D2D] text-[#FF8400] shadow-sm hover:shadow-md hover:-translate-y-0.5'
+                                : 'bg-muted-foreground/30 text-white cursor-not-allowed'
+                                }`}
+                        >
+                            {isChecking ? '확인 중...' : isSubmitting ? '저장 중...' : '시작하기'}
+                        </Button>
+                    </div>
                 </div>
             </div>
         </MobileFrame>
