@@ -102,21 +102,12 @@ export default function LoginPage() {
                     <p className="mt-8 text-center text-xs text-muted-foreground/60 animate-fade-in-up delay-500">
                         로그인 시{' '}
                         <a
-                            href="https://maperson.notion.site/30be387af28e80368077ccae0871e487?source=copy_link"
+                            href="https://maperson.notion.site/2d2e387af28e804c94cecdf08c322ef6?source=copy_link"
                             target="_blank"
                             rel="noopener noreferrer"
                             className="underline hover:text-foreground cursor-pointer transition-colors"
                         >
-                            이용약관
-                        </a>{' '}
-                        및{' '}
-                        <a
-                            href="https://maperson.notion.site/30be387af28e80368077ccae0871e487?source=copy_link"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="underline hover:text-foreground cursor-pointer transition-colors"
-                        >
-                            개인정보처리방침
+                            이용약관 및 개인정보처리방침
                         </a>
                         에<br />
                         동의하는 것으로 간주됩니다.
@@ -124,7 +115,7 @@ export default function LoginPage() {
                 </div>
 
                 {/* 저작권 문구 (하단 고정) */}
-                <p className="mb-8 text-center text-xs text-muted-foreground/40 animate-fade-in-up delay-700">
+                <p className="mb-8 text-center text-xs text-gray-400 animate-fade-in-up delay-700">
                     ⓒ 2025 COGNITY. All rights reserved.
                 </p>
             </div>
