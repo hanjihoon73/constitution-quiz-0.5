@@ -232,11 +232,11 @@ function HomeContent() {
   };
 
   return (
-    <MobileFrame className="flex flex-col">
+    <MobileFrame>
       <Header />
 
-      {/* 퀴즈팩 목록 (스크롤 가능) */}
-      <main className="flex-1 overflow-y-auto">
+      {/* 퀴즈팩 목록 (전체 화면 스크롤) */}
+      <main className="pb-10 pt-2">
         <QuizpackList
           quizpacks={quizpacks}
           isLoading={authLoading || quizpacksLoading}

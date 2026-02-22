@@ -15,8 +15,8 @@ interface HeaderProps {
  */
 export function Header({ showProfile = true }: HeaderProps) {
     return (
-        <header className="sticky top-0 z-50 w-full safe-area-top">
-            <div className="glass flex h-14 items-center justify-between px-4">
+        <header className="sticky top-0 z-50 w-full safe-area-top bg-white/80 border-b border-black/5">
+            <div className="flex h-18 items-center justify-between px-6">
                 {/* BI 로고 */}
                 <Link href="/" className="flex items-center">
                     <Image
