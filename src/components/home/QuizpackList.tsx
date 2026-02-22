@@ -83,12 +83,14 @@ export function QuizpackList({ quizpacks, isLoading, error, onCompletedClick, on
     // 퀴즈팩 목록
     return (
         <div className="px-4 py-6 overflow-y-auto">
-            {quizpacks.map((quizpack) => {
+            {quizpacks.map((quizpack, index) => {
                 const isCurrent = quizpack.id === currentQuizpackId;
                 return (
                     <div
                         key={quizpack.id}
                         ref={isCurrent ? currentRef : undefined}
+                        className="animate-fade-in-up"
+                        style={{ animationDelay: `${index * 100}ms` }}
                     >
                         <QuizpackCard
                             quizpack={quizpack}

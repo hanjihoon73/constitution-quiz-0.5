@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { User } from 'lucide-react';
+import { CircleUser } from 'lucide-react';
 
 interface HeaderProps {
     showProfile?: boolean;
@@ -15,7 +15,7 @@ interface HeaderProps {
  */
 export function Header({ showProfile = true }: HeaderProps) {
     return (
-        <header className="sticky top-0 z-50 w-full safe-area-top bg-white/80 border-b border-black/5">
+        <header className="sticky top-0 z-50 w-full safe-area-top bg-white/100 border-b border-black/5 shadow-sm">
             <div className="flex h-18 items-center justify-between px-6">
                 {/* BI 로고 */}
                 <Link href="/" className="flex items-center">
@@ -34,9 +34,9 @@ export function Header({ showProfile = true }: HeaderProps) {
                     {showProfile && (
                         <Link
                             href="/profile"
-                            className="flex h-10 w-10 items-center justify-center rounded-full transition-colors hover:bg-gray-100"
+                            className="flex h-10 w-10 items-center justify-center rounded-full transition-transform duration-200 hover:-translate-y-0.5"
                         >
-                            <User className="h-6 w-6 text-gray-700" />
+                            <CircleUser className="h-7 w-7 text-gray-700" strokeWidth={1.5} />
                         </Link>
                     )}
                 </div>
