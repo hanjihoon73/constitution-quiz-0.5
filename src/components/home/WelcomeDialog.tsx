@@ -35,15 +35,15 @@ export function WelcomeDialog({ open, onOpenChange }: WelcomeDialogProps) {
                         <p className="text-[15px] font-medium leading-relaxed text-foreground/90">
                             법은 어렵다고,
                             <br />
-                            나와는 먼 얘기라고 생각했나요?
+                            나와는 먼 이야기라고 생각하나요?
                         </p>
                         <p className="text-[15px] font-medium leading-relaxed text-foreground/90">
                             하지만 <span className="font-bold text-foreground">헌법</span>은 대한민국 국민이라면
                             <br />
-                            누구나 알아야 할 <span className="font-bold text-foreground">우리 모두의 법</span>입니다.
+                            꼭 알아야 할 <span className="font-bold text-foreground">우리 모두의 법</span>입니다.
                         </p>
                         <p className="text-[15px] font-medium leading-relaxed text-foreground/90">
-                            몰라서 당하지 않고,
+                            몰라서 당하지 않도록,
                             <br />
                             알아서 당당히 살 수 있도록.
                         </p>

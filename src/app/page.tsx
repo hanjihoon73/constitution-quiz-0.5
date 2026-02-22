@@ -1,9 +1,10 @@
 'use client';
 
-import { Suspense, useEffect, useState, useCallback } from 'react';
+import { Suspense, useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { createClient } from '@/lib/supabase/client';
 import { MobileFrame, Header } from '@/components/common';
-import { QuizpackList, WelcomeDialog } from '@/components/home';
+import { QuizpackList, WelcomeDialog, ExitConfirmDialog } from '@/components/home';
 import { useAuth } from '@/components/auth';
 import { useQuizpacks } from '@/hooks/useQuizpacks';
 import { AllClearDialog } from '@/components/quiz/AllClearDialog';
@@ -41,6 +42,8 @@ function HomeContent() {
   const [showWelcomeDialog, setShowWelcomeDialog] = useState(false);
   const [showRestartDialog, setShowRestartDialog] = useState(false);
   const [showAbortDialog, setShowAbortDialog] = useState(false);
+  const [showExitDialog, setShowExitDialog] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [selectedPackId, setSelectedPackId] = useState<number | null>(null);
   const [inProgressPack, setInProgressPack] = useState<{
     id: number;
@@ -68,9 +71,47 @@ function HomeContent() {
   useEffect(() => {
     if (searchParams.get('welcome') === 'true') {
       setShowWelcomeDialog(true);
-      router.replace('/', { scroll: false });
+      // Next.js 라우터의 비동기 동작 간섭을 피하기 위해 네이티브 방식을 사용해 파라미터를 조용히 지웁니다.
+      const url = new URL(window.location.href);
+      url.searchParams.delete('welcome');
+      window.history.replaceState(null, '', url.pathname + url.search);
     }
   }, [searchParams, router]);
+
+  // 브라우저 뒤로가기(popstate) 감지하여 앱 종료 모달 표시
+  useEffect(() => {
+    let trapSet = false;
+
+    const setupTrap = () => {
+      if (!trapSet) {
+        // Next.js 상태를 해치지 않게 현재 state를 그대로 복사해서 한 칸 더 전진(push)합니다.
+        window.history.pushState(null, '', window.location.href);
+        trapSet = true;
+      }
+    };
+
+    // 1. 페이지 로드 시 500ms 지연 후 트랩 설치 (일부 브라우저에선 무시될 수 있음)
+    const timeoutId = setTimeout(setupTrap, 500);
+
+    // 2. 확실한 방어: 브라우저 보안 제약을 뚫기 위해 화면을 처음 터치/클릭하는 순간 즉시 트랩 설치
+    window.addEventListener('click', setupTrap, { capture: true, once: true });
+    window.addEventListener('touchstart', setupTrap, { capture: true, once: true });
+
+    const handlePopstate = () => {
+      // 뒤로가기를 강제로 취소하고(다시 앞으로 밀어놓고) 종료 다이얼로그 띄우기
+      window.history.pushState(null, '', window.location.href);
+      setShowExitDialog(true);
+    };
+
+    window.addEventListener('popstate', handlePopstate);
+
+    return () => {
+      clearTimeout(timeoutId);
+      window.removeEventListener('click', setupTrap, { capture: true });
+      window.removeEventListener('touchstart', setupTrap, { capture: true });
+      window.removeEventListener('popstate', handlePopstate);
+    };
+  }, []);
 
   const handleAllClearDialogChange = (open: boolean) => {
     setShowAllClearDialog(open);
@@ -176,6 +217,20 @@ function HomeContent() {
     setPendingAction(null);
   }, []);
 
+  // ExitConfirmDialog (앱 종료) 확인 핸들러
+  const handleExitConfirm = async () => {
+    setIsLoggingOut(true);
+    try {
+      const supabase = createClient();
+      await supabase.auth.signOut();
+      window.location.replace('/login');
+    } catch (err) {
+      console.error('로그아웃 에러:', err);
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
+
   return (
     <MobileFrame className="flex flex-col">
       <Header />
@@ -216,6 +271,14 @@ function HomeContent() {
         currentPackOrder={inProgressPack?.quizpack_order || 0}
         onConfirm={handleAbortConfirm}
         onCancel={handleAbortCancel}
+      />
+
+      {/* 앱 종료 확인 다이얼로그 */}
+      <ExitConfirmDialog
+        open={showExitDialog}
+        onOpenChange={setShowExitDialog}
+        onConfirm={handleExitConfirm}
+        isLoggingOut={isLoggingOut}
       />
     </MobileFrame>
   );
