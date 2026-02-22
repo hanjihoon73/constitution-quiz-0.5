@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { WithdrawDialog } from '@/components/profile';
 import { updateNickname, checkNicknameDuplicate } from '@/lib/api/user';
 import { toast } from 'sonner';
-import { ArrowLeft, Pencil, Check, X, LogOut } from 'lucide-react';
+import { ArrowLeft, Pencil, Check, X, LogOut, CircleUser } from 'lucide-react';
 
 // 닉네임 유효성 검사 정규식 (2-10자, 한글/영문/숫자만)
 const NICKNAME_REGEX = /^[가-힣a-zA-Z0-9]{2,10}$/;
@@ -22,6 +22,8 @@ export default function ProfilePage() {
     const [isEditingNickname, setIsEditingNickname] = useState(false);
     const [newNickname, setNewNickname] = useState('');
     const [nicknameError, setNicknameError] = useState('');
+    const [isValid, setIsValid] = useState(false);
+    const [isChecking, setIsChecking] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [showWithdrawDialog, setShowWithdrawDialog] = useState(false);
 
@@ -41,10 +43,57 @@ export default function ProfilePage() {
         return '';
     };
 
+    // 닉네임 입력 핸들러
+    const handleNicknameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value;
+        setNewNickname(value);
+        setIsValid(false);
+
+        const syntaxError = validateNickname(value);
+        if (syntaxError) {
+            setNicknameError(syntaxError);
+        } else {
+            setNicknameError('');
+        }
+    };
+
+    // 닉네임 실시간 중복 검사 (디바운스 적용)
+    useEffect(() => {
+        if (!newNickname || validateNickname(newNickname) !== '') {
+            setIsValid(false);
+            return;
+        }
+
+        if (dbUser && newNickname === dbUser.nickname) {
+            // 본인 원래 닉네임과 동일하면 중복 처리 통과
+            setNicknameError('');
+            setIsValid(true);
+            return;
+        }
+
+        const timer = setTimeout(async () => {
+            setIsChecking(true);
+            if (dbUser) {
+                const isDuplicate = await checkNicknameDuplicate(newNickname, dbUser.id);
+                if (isDuplicate) {
+                    setNicknameError('이미 사용 중인 닉네임입니다.');
+                    setIsValid(false);
+                } else {
+                    setNicknameError('');
+                    setIsValid(true);
+                }
+            }
+            setIsChecking(false);
+        }, 300);
+
+        return () => clearTimeout(timer);
+    }, [newNickname, dbUser]);
+
     // 닉네임 편집 시작
     const startEditNickname = () => {
         setNewNickname(dbUser?.nickname || '');
         setNicknameError('');
+        setIsValid(true);
         setIsEditingNickname(true);
     };
 
@@ -53,6 +102,7 @@ export default function ProfilePage() {
         setIsEditingNickname(false);
         setNewNickname('');
         setNicknameError('');
+        setIsValid(false);
     };
 
     // 닉네임 저장
@@ -65,22 +115,9 @@ export default function ProfilePage() {
             return;
         }
 
-        // 유효성 검사
-        const error = validateNickname(newNickname);
-        if (error) {
-            setNicknameError(error);
-            return;
-        }
+        if (!isValid) return;
 
         setIsSaving(true);
-
-        // 중복 검사
-        const isDuplicate = await checkNicknameDuplicate(newNickname, dbUser.id);
-        if (isDuplicate) {
-            setNicknameError('이미 사용 중인 닉네임입니다.');
-            setIsSaving(false);
-            return;
-        }
 
         // 업데이트
         const result = await updateNickname(dbUser.id, newNickname);
@@ -101,20 +138,11 @@ export default function ProfilePage() {
         router.push('/login');
     };
 
-    // 계정 종류 표시
     const getProviderLabel = (provider: string) => {
         switch (provider) {
             case 'google': return 'Google';
             case 'kakao': return 'Kakao';
             default: return provider;
-        }
-    };
-
-    const getProviderIcon = (provider: string) => {
-        switch (provider) {
-            case 'google': return '🔵';
-            case 'kakao': return '🟡';
-            default: return '⚪';
         }
     };
 
@@ -132,74 +160,90 @@ export default function ProfilePage() {
     return (
         <MobileFrame>
             <Header />
-            <main className="flex-1 overflow-y-auto">
+            <main className="flex-1 overflow-y-auto flex flex-col">
                 {/* 뒤로가기 */}
                 <div className="px-4 pt-4">
                     <button
                         onClick={() => router.back()}
-                        className="flex items-center gap-1 text-gray-500 hover:text-gray-700 transition-colors"
+                        className="flex items-center justify-center w-10 h-10 rounded-full text-gray-500 transition-transform duration-200 hover:-translate-y-0.5 active:scale-95 hover:text-gray-700"
                     >
-                        <ArrowLeft size={20} />
-                        <span className="text-sm">돌아가기</span>
+                        <ArrowLeft size={24} />
                     </button>
                 </div>
 
                 {/* 프로필 카드 */}
                 <div className="px-4 pt-6 pb-4">
-                    <div className="glass-card p-6">
+                    <div className="bg-white rounded-2xl border border-gray-200 p-6">
                         {/* 프로필 아이콘 + 닉네임 */}
                         <div className="flex flex-col items-center gap-4">
-                            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-[#FF8400] to-[#FFB347] flex items-center justify-center shadow-lg">
-                                <span className="text-4xl">👤</span>
+                            <div className="w-24 h-24 rounded-full flex items-center justify-center" style={{ backgroundColor: '#2D2D2D' }}>
+                                <CircleUser className="w-18 h-18" color="#FF8400" strokeWidth={1.5} />
                             </div>
 
                             {/* 닉네임 영역 */}
                             {isEditingNickname ? (
-                                <div className="w-full max-w-[280px] space-y-2">
-                                    <div className="flex items-center gap-2">
-                                        <Input
-                                            type="text"
-                                            value={newNickname}
-                                            onChange={(e) => {
-                                                setNewNickname(e.target.value);
-                                                setNicknameError(validateNickname(e.target.value));
-                                            }}
-                                            maxLength={10}
-                                            className={`h-10 text-center text-lg font-bold ${nicknameError ? 'border-red-500' : ''}`}
-                                            autoFocus
-                                        />
-                                        <button
-                                            onClick={saveNickname}
-                                            disabled={isSaving || !!nicknameError}
-                                            className="p-2 rounded-full hover:bg-green-50 text-green-600 disabled:opacity-50 transition-colors"
-                                        >
-                                            <Check size={20} />
-                                        </button>
-                                        <button
-                                            onClick={cancelEditNickname}
-                                            className="p-2 rounded-full hover:bg-red-50 text-red-400 transition-colors"
-                                        >
-                                            <X size={20} />
-                                        </button>
+                                <div className="w-full max-w-[300px] space-y-3">
+                                    <div className="relative flex items-center justify-center w-full">
+                                        <div className="w-48 relative">
+                                            <Input
+                                                type="text"
+                                                placeholder="닉네임 (2-10자)"
+                                                value={newNickname}
+                                                onChange={handleNicknameChange}
+                                                maxLength={10}
+                                                className={`h-12 w-full rounded-xl text-center text-lg !ring-0 transition-colors duration-200 ${nicknameError
+                                                    ? 'border-gray-200 focus-visible:border-gray-400 text-gray-600'
+                                                    : isValid
+                                                        ? 'border-gray-400 focus-visible:border-gray-400 text-gray-600'
+                                                        : 'border-input focus-visible:border-gray-400'
+                                                    }`}
+                                                autoFocus
+                                            />
+                                            {/* 버튼 그룹: 입력창의 오른쪽 바깥에 위치 */}
+                                            <div className="absolute left-full top-1/2 -translate-y-1/2 ml-1 flex items-center gap-0">
+                                                <button
+                                                    onClick={saveNickname}
+                                                    disabled={!isValid || isSaving || isChecking}
+                                                    className="p-1.5 flex-shrink-0 flex items-center justify-center text-gray-400 hover:text-[#FF8400] disabled:opacity-50 disabled:hover:text-gray-400 transition-colors cursor-pointer disabled:cursor-not-allowed"
+                                                >
+                                                    <Check size={22} />
+                                                </button>
+                                                <button
+                                                    onClick={cancelEditNickname}
+                                                    className="p-1.5 flex-shrink-0 flex items-center justify-center text-gray-400 hover:text-[#FF8400] transition-colors cursor-pointer"
+                                                >
+                                                    <X size={22} />
+                                                </button>
+                                            </div>
+                                        </div>
                                     </div>
-                                    {nicknameError && (
-                                        <p className="text-center text-xs text-red-500">{nicknameError}</p>
-                                    )}
-                                    <p className="text-center text-xs text-gray-400">
-                                        한글, 영문, 숫자 2-10자
-                                    </p>
+                                    <div className="h-5">
+                                        {nicknameError && (
+                                            <p className="text-center text-xs text-red-500">{nicknameError}</p>
+                                        )}
+                                        {isValid && !nicknameError && (
+                                            <p className="text-center text-xs text-green-600">사용 가능한 닉네임입니다!</p>
+                                        )}
+                                        {!nicknameError && !isValid && (
+                                            <p className="text-center text-xs text-gray-400">
+                                                한글, 영문, 숫자 사용 가능
+                                            </p>
+                                        )}
+                                    </div>
                                 </div>
                             ) : (
-                                <div className="flex items-center gap-2">
-                                    <h2 className="text-xl font-bold text-gray-800">
-                                        {dbUser.nickname}
-                                    </h2>
-                                    <button
-                                        onClick={startEditNickname}
-                                        className="p-1.5 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
-                                    >
-                                        <Pencil size={16} />
-                                    </button>
+                                <div className="relative flex items-center justify-center w-full">
+                                    <div className="flex relative items-center justify-center z-10 w-full">
+                                        <h2 className="text-xl font-bold text-gray-800 text-center px-10 relative">
+                                            {dbUser.nickname}
+                                            <button
+                                                onClick={startEditNickname}
+                                                className="absolute right-0 top-1/2 -translate-y-1/2 p-1.5 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
+                                            >
+                                                <Pencil size={18} />
+                                            </button>
+                                        </h2>
+                                    </div>
                                 </div>
                             )}
                         </div>
@@ -208,18 +252,16 @@ export default function ProfilePage() {
 
                 {/* 계정 정보 */}
                 <div className="px-4 pb-4">
-                    <div className="glass-card p-5">
-                        <h3 className="text-sm font-semibold text-gray-500 mb-4 uppercase tracking-wider">
-                            계정 정보
-                        </h3>
-
-                        <div className="space-y-4">
+                    <div className="bg-white rounded-2xl border border-gray-200 p-5">
+                        <div className="space-y-4 pt-2">
                             {/* 계정 종류 */}
                             <div className="flex items-center justify-between">
                                 <span className="text-sm text-gray-500">계정 종류</span>
-                                <div className="flex items-center gap-2">
-                                    <span>{getProviderIcon(dbUser.provider)}</span>
-                                    <span className="text-sm font-medium text-gray-800">
+                                <div className="flex items-center">
+                                    <span
+                                        className="px-3 py-1 rounded-md text-[12px] font-medium"
+                                        style={{ backgroundColor: '#2D2D2D', color: '#ffffff' }}
+                                    >
                                         {getProviderLabel(dbUser.provider)}
                                     </span>
                                 </div>
@@ -228,11 +270,19 @@ export default function ProfilePage() {
                             {/* 구분선 */}
                             <div className="border-t border-gray-100" />
 
-                            {/* ID */}
+                            {/* 가입일시 */}
                             <div className="flex items-center justify-between">
-                                <span className="text-sm text-gray-500">ID</span>
-                                <span className="text-sm font-mono text-gray-600">
-                                    {dbUser.id}
+                                <span className="text-sm text-gray-500">최초 가입일시</span>
+                                <span className="text-sm font-medium text-gray-800">
+                                    {dbUser.created_at ? (() => {
+                                        const d = new Date(dbUser.created_at);
+                                        const yyyy = d.getFullYear();
+                                        const mm = String(d.getMonth() + 1).padStart(2, '0');
+                                        const dd = String(d.getDate()).padStart(2, '0');
+                                        const hh = String(d.getHours()).padStart(2, '0');
+                                        const min = String(d.getMinutes()).padStart(2, '0');
+                                        return `${yyyy}. ${mm}. ${dd}. ${hh}:${min}`;
+                                    })() : '-'}
                                 </span>
                             </div>
                         </div>
@@ -244,7 +294,7 @@ export default function ProfilePage() {
                     <Button
                         onClick={handleLogout}
                         variant="outline"
-                        className="w-full h-12 rounded-xl text-gray-600 border-gray-200 hover:bg-gray-50 font-medium text-base gap-2"
+                        className="w-full h-12 rounded-xl text-gray-600 border-gray-200 hover:bg-gray-50 font-medium text-sm gap-2"
                     >
                         <LogOut size={18} />
                         로그아웃
@@ -262,9 +312,16 @@ export default function ProfilePage() {
                 </div>
 
                 {/* 서비스 문의 */}
-                <div className="px-4 pb-8 flex justify-center">
-                    <p className="text-xs text-gray-300">
+                <div className="px-4 pb-4 flex justify-center mt-2">
+                    <p className="text-xs text-gray-400">
                         서비스 문의: cognityhelp@gmail.com
+                    </p>
+                </div>
+
+                {/* 저작권 문구 */}
+                <div className="px-4 pb-12 flex justify-center mt-auto">
+                    <p className="text-xs text-gray-400">
+                        ⓒ 2025 COGNITY. All rights reserved.
                     </p>
                 </div>
             </main>

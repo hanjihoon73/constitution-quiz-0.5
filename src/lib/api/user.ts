@@ -10,18 +10,14 @@ export async function checkNicknameDuplicate(
     currentUserId: number
 ): Promise<boolean> {
     const { data, error } = await supabase
-        .from('users')
-        .select('id')
-        .eq('nickname', nickname)
-        .neq('id', currentUserId)
-        .maybeSingle();
+        .rpc('check_nickname_exists', { check_nickname: nickname });
 
     if (error) {
         console.error('닉네임 중복 검사 에러:', error);
         return false;
     }
 
-    return data !== null; // null이 아니면 중복
+    return data === true;
 }
 
 /**
