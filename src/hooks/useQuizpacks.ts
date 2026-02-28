@@ -15,13 +15,13 @@ interface UseQuizpacksReturn {
  * 퀴즈팩 목록을 가져오는 커스텀 훅
  */
 export function useQuizpacks(): UseQuizpacksReturn {
-    const { user, dbUser, isLoading: authLoading } = useAuth();
+    const { user, dbUser, isLoading: authLoading, isDbUserLoaded } = useAuth();
     const [quizpacks, setQuizpacks] = useState<QuizpackWithStatus[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<Error | null>(null);
 
-    // user는 있지만 dbUser가 아직 없는 상태 = fetchDbUser 진행 중
-    const isDbUserLoading = !!user && !dbUser && !authLoading;
+    // user는 있으나 아직 dbUser를 가져오는 중인 상태 (최초 조회 대기)
+    const isDbUserLoading = !!user && !isDbUserLoaded;
 
     const fetchQuizpacks = useCallback(async () => {
         // 인증 로딩 중이거나 DB 사용자 로딩 중이면 대기

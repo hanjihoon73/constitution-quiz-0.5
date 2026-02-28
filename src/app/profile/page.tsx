@@ -17,7 +17,7 @@ const NICKNAME_REGEX = /^[가-힣a-zA-Z0-9]{2,10}$/;
 
 export default function ProfilePage() {
     const router = useRouter();
-    const { user, dbUser, isLoading, signOut, refreshDbUser } = useAuth();
+    const { user, dbUser, isLoading, isDbUserLoaded, signOut, refreshDbUser } = useAuth();
 
     const [isEditingNickname, setIsEditingNickname] = useState(false);
     const [newNickname, setNewNickname] = useState('');
@@ -146,7 +146,8 @@ export default function ProfilePage() {
         }
     };
 
-    if (isLoading || !dbUser) {
+    // 초기 인증 확인 및 DB유저 조회 1회가 안 끝났을 경우에만 로딩 표시
+    if (isLoading || !isDbUserLoaded) {
         return (
             <MobileFrame>
                 <Header />
@@ -235,7 +236,7 @@ export default function ProfilePage() {
                                 <div className="relative flex items-center justify-center w-full">
                                     <div className="flex relative items-center justify-center z-10 w-full">
                                         <h2 className="text-xl font-bold text-gray-800 text-center px-10 relative">
-                                            {dbUser.nickname}
+                                            {dbUser?.nickname}
                                             <button
                                                 onClick={startEditNickname}
                                                 className="absolute right-0 top-1/2 -translate-y-1/2 p-1.5 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
@@ -262,7 +263,7 @@ export default function ProfilePage() {
                                         className="px-3 py-1 rounded-md text-[12px] font-medium"
                                         style={{ backgroundColor: '#2D2D2D', color: '#ffffff' }}
                                     >
-                                        {getProviderLabel(dbUser.provider)}
+                                        {getProviderLabel(dbUser?.provider || '')}
                                     </span>
                                 </div>
                             </div>
@@ -274,7 +275,7 @@ export default function ProfilePage() {
                             <div className="flex items-center justify-between">
                                 <span className="text-sm text-gray-500">가입 일시</span>
                                 <span className="text-sm font-medium text-gray-800">
-                                    {dbUser.created_at ? (() => {
+                                    {dbUser?.created_at ? (() => {
                                         const d = new Date(dbUser.created_at);
                                         const yyyy = d.getFullYear();
                                         const mm = String(d.getMonth() + 1).padStart(2, '0');
@@ -330,8 +331,8 @@ export default function ProfilePage() {
             <WithdrawDialog
                 open={showWithdrawDialog}
                 onOpenChange={setShowWithdrawDialog}
-                nickname={dbUser.nickname}
-                userId={dbUser.id}
+                nickname={dbUser?.nickname || ''}
+                userId={dbUser?.id || 0}
                 authId={user?.id || ''}
             />
         </MobileFrame>

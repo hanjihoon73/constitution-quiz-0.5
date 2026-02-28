@@ -12,6 +12,7 @@ interface AuthContextType {
     isLoading: boolean;
     signOut: () => Promise<void>;
     refreshDbUser: () => Promise<void>;
+    isDbUserLoaded: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -21,6 +22,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const [session, setSession] = useState<Session | null>(null);
     const [dbUser, setDbUser] = useState<DbUser | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [isDbUserLoaded, setIsDbUserLoaded] = useState(false);
     const isInitialized = useRef(false);
 
     const supabase = createClient();
@@ -50,6 +52,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } else {
             setDbUser(null);
         }
+        setIsDbUserLoaded(true); // dbUser 조회가 끝났음을 갱신
     };
 
     // DB 사용자 정보 새로고침
@@ -65,6 +68,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(null);
         setSession(null);
         setDbUser(null);
+        setIsDbUserLoaded(false);
     };
 
     useEffect(() => {
@@ -100,6 +104,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     await fetchDbUser(session.user);
                 } else {
                     setDbUser(null);
+                    setIsDbUserLoaded(false);
                 }
 
                 setIsLoading(false);
@@ -119,7 +124,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 dbUser,
                 isLoading,
                 signOut,
-                refreshDbUser
+                refreshDbUser,
+                isDbUserLoaded
             }}
         >
             {children}
