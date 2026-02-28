@@ -269,7 +269,7 @@ export default function ProfilePage() {
                                 <div className="flex items-center">
                                     <span
                                         className="px-3 py-1 rounded-md text-[12px] font-medium"
-                                        style={{ backgroundColor: '#2D2D2D', color: '#ffffff' }}
+                                        style={{ backgroundColor: '#2D2D2D', color: '#ff8400' }}
                                     >
                                         {getProviderLabel(dbUser?.provider || '')}
                                     </span>

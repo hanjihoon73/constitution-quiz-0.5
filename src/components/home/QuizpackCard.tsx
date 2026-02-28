@@ -100,7 +100,7 @@ export function QuizpackCard({ quizpack, onCompletedClick, onOpenedClick, isCurr
                     const tagTheme = isClosed
                         ? 'bg-[#E5E7EB] text-[#9CA3AF]'
                         : quizpack.status === 'completed'
-                            ? 'bg-[#2D2D2D] text-white'
+                            ? 'bg-[#2D2D2D] text-gray-300'
                             : 'bg-[#2D2D2D] text-[#FF8400]';
 
                     return (
