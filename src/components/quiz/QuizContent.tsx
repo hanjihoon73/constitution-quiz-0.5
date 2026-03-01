@@ -86,7 +86,7 @@ export function QuizContent({
     };
 
     return (
-        <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
             {/* 퀴즈 유형 라벨 */}
             <div>
                 <span
@@ -105,9 +105,9 @@ export function QuizContent({
             </div>
 
             {/* 질문 */}
-            <div>
+            <div style={{ padding: '0 12px' }}>
                 <h2 style={{
-                    fontSize: '20px',
+                    fontSize: '18px',
                     fontWeight: 'bold',
                     color: '#1F2937',
                     lineHeight: '1.5',
@@ -211,12 +211,11 @@ export function QuizContent({
                                     display: 'flex',
                                     alignItems: 'center',
                                     gap: '6px',
-                                    color: '#38D2E3', // 오답일 때도 정답일 때와 동일하게 유지
                                     fontWeight: 'bold',
                                     marginBottom: '8px'
                                 }}>
-                                    <BookOpenCheck size={18} />
-                                    <span>해설</span>
+                                    <BookOpenCheck size={18} color="#38D2E3" />
+                                    <span style={{ color: '#9CA3AF' }}>해설</span>
                                 </div>
                                 <div style={{ color: '#374151' }}>{quiz.explanation}</div>
                             </div>

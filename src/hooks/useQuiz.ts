@@ -420,19 +420,29 @@ export function useQuiz(packId: number, options: UseQuizOptions = {}): UseQuizRe
 
     // 퀴즈팩 완료
     const completeQuizPack = useCallback(async () => {
-        if (!dbUser?.id || !state.packData || !state.startTime) return;
+        if (!dbUser?.id || !state.packData) {
+            console.error('[completeQuizPack] dbUser.id 또는 packData가 없습니다.', { dbUserId: dbUser?.id, hasPackData: !!state.packData });
+            return;
+        }
 
-        const totalTimeSeconds = Math.floor((new Date().getTime() - state.startTime.getTime()) / 1000);
+        const totalTimeSeconds = state.startTime
+            ? Math.floor((new Date().getTime() - state.startTime.getTime()) / 1000)
+            : 0;
 
-        await saveQuizProgress(dbUser.id, packId, {
-            currentQuizOrder: totalQuizzes,
-            solvedQuizCount: totalQuizzes,
-            correctCount,
-            incorrectCount,
-            totalQuizCount: totalQuizzes,
-            status: 'completed',
-            totalTimeSeconds,
-        });
+        try {
+            await saveQuizProgress(dbUser.id, packId, {
+                currentQuizOrder: totalQuizzes,
+                solvedQuizCount: totalQuizzes,
+                correctCount,
+                incorrectCount,
+                totalQuizCount: totalQuizzes,
+                status: 'completed',
+                totalTimeSeconds,
+            });
+        } catch (error) {
+            console.error('[completeQuizPack] saveQuizProgress 에러:', error);
+            throw error;
+        }
     }, [dbUser?.id, packId, state.packData, state.startTime, totalQuizzes, correctCount, incorrectCount]);
 
     return {

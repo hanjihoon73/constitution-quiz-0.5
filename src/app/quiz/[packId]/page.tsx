@@ -127,16 +127,18 @@ export default function QuizPage() {
         : selectedIds.length > 0;
 
     return (
-        <QuizLayout onExit={handleExit}>
-            {/* 네비게이션 */}
-            <QuizNavigation
-                total={progress.total}
-                current={progress.current}
-                answers={answers}
-                quizIds={packData.quizzes.map(q => q.id)}
-                onNavigate={goToQuiz}
-            />
-
+        <QuizLayout
+            onExit={handleExit}
+            navigation={
+                <QuizNavigation
+                    total={progress.total}
+                    current={progress.current}
+                    answers={answers}
+                    quizIds={packData.quizzes.map(q => q.id)}
+                    onNavigate={goToQuiz}
+                />
+            }
+        >
             {/* 퀴즈 콘텐츠 */}
             <div style={{ flex: 1, overflow: 'auto' }}>
                 <QuizContent

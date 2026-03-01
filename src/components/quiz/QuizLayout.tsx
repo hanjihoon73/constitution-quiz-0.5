@@ -1,22 +1,45 @@
 'use client';
 
-import { ReactNode } from 'react';
+import React, { ReactNode, useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { MobileFrame } from '@/components/common';
 import { ExitConfirmDialog } from './ExitConfirmDialog';
-import { useState } from 'react';
 
 interface QuizLayoutProps {
     children: ReactNode;
+    navigation?: ReactNode; // 네비게이션을 헤더와 묶기 위해 prop으로 분리
     onExit?: () => void;
 }
 
 /**
  * 퀴즈 화면 전체 레이아웃
  */
-export function QuizLayout({ children, onExit }: QuizLayoutProps) {
+export function QuizLayout({ children, navigation, onExit }: QuizLayoutProps) {
     const router = useRouter();
     const [showExitDialog, setShowExitDialog] = useState(false);
+    const [isScrolled, setIsScrolled] = useState(false);
+    const mainRef = useRef<HTMLElement>(null);
+
+    // 스크롤 이벤트 핸들러
+    useEffect(() => {
+        const handleScroll = () => {
+            if (mainRef.current) {
+                // 스크롤이 조금이라도 내려가면 그림자 표시
+                setIsScrolled(mainRef.current.scrollTop > 5);
+            }
+        };
+
+        const mainElement = mainRef.current;
+        if (mainElement) {
+            mainElement.addEventListener('scroll', handleScroll);
+        }
+
+        return () => {
+            if (mainElement) {
+                mainElement.removeEventListener('scroll', handleScroll);
+            }
+        };
+    }, []);
 
     const handleExitClick = () => {
         setShowExitDialog(true);
@@ -31,40 +54,64 @@ export function QuizLayout({ children, onExit }: QuizLayoutProps) {
 
     return (
         <MobileFrame className="flex flex-col bg-white">
-            {/* 헤더 */}
-            <header
+            {/* 상단 고정 영역 (헤더 + 네비게이션) */}
+            <div
                 style={{
-                    padding: '16px 20px 10px 20px',
-                    display: 'flex',
-                    alignItems: 'center',
+                    position: 'sticky',
+                    top: 0,
+                    zIndex: 50, // 다른 요소들 위로 올라오도록 z-index 증가
+                    backgroundColor: '#ffffff',
+                    // 스크롤 시 진한 그림자, 아닐 때는 아래쪽 연한 테두리만
+                    boxShadow: isScrolled ? '0 4px 10px rgba(0, 0, 0, 0.1)' : 'none',
+                    borderBottom: isScrolled ? 'none' : '1px solid #ffffffff',
+                    transition: 'box-shadow 0.2s ease-in-out, border-bottom 0.2s ease-in-out',
                 }}
             >
-                <button
-                    onClick={handleExitClick}
-                    className="quiz-hover"
+                {/* 헤더 */}
+                <header
                     style={{
+                        padding: '16px 20px 10px 20px',
                         display: 'flex',
                         alignItems: 'center',
-                        justifyContent: 'center',
-                        width: '32px',
-                        height: '32px',
-                        background: 'none',
-                        border: 'none',
-                        cursor: 'pointer',
-                        color: '#6B7280',
-                        fontSize: '20px',
                     }}
-                    aria-label="나가기"
                 >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <line x1="19" y1="12" x2="5" y2="12"></line>
-                        <polyline points="12 19 5 12 12 5"></polyline>
-                    </svg>
-                </button>
-            </header>
+                    <button
+                        onClick={handleExitClick}
+                        className="quiz-hover"
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            width: '32px',
+                            height: '32px',
+                            background: 'none',
+                            border: 'none',
+                            cursor: 'pointer',
+                            color: '#6B7280',
+                            fontSize: '20px',
+                        }}
+                        aria-label="나가기"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <line x1="19" y1="12" x2="5" y2="12"></line>
+                            <polyline points="12 19 5 12 12 5"></polyline>
+                        </svg>
+                    </button>
+                </header>
+
+                {/* 네비게이션 영역 */}
+                {navigation && (
+                    <div style={{ backgroundColor: '#ffffff' }}>
+                        {navigation}
+                    </div>
+                )}
+            </div>
 
             {/* 메인 콘텐츠 */}
-            <main style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
+            <main
+                ref={mainRef}
+                style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column' }}
+            >
                 {children}
             </main>
 

@@ -22,7 +22,7 @@ export function QuizNavigation({ total, current, answers, quizIds, onNavigate }:
                 display: 'flex',
                 justifyContent: 'center',
                 padding: '10px 20px 16px 20px',
-                borderBottom: '1px solid #F3F4F6',
+                // borderBottom: '1px solid #F3F4F6', // 이제 QuizLayout에서 처리하므로 주석 처리 또는 삭제
             }}
         >
             <div
