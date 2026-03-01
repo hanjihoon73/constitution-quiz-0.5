@@ -34,27 +34,32 @@ export function QuizLayout({ children, onExit }: QuizLayoutProps) {
             {/* 헤더 */}
             <header
                 style={{
-                    padding: '16px',
-                    borderBottom: '1px solid #f3f4f6',
+                    padding: '16px 24px',
                     display: 'flex',
                     alignItems: 'center',
                 }}
             >
                 <button
                     onClick={handleExitClick}
+                    className="quiz-hover"
                     style={{
                         display: 'flex',
                         alignItems: 'center',
-                        gap: '8px',
+                        justifyContent: 'center',
+                        width: '32px',
+                        height: '32px',
                         background: 'none',
                         border: 'none',
                         cursor: 'pointer',
-                        color: '#6b7280',
-                        fontSize: '14px',
+                        color: '#6B7280',
+                        fontSize: '20px',
                     }}
+                    aria-label="나가기"
                 >
-                    <span style={{ fontSize: '20px' }}>←</span>
-                    <span>나가기</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="19" y1="12" x2="5" y2="12"></line>
+                        <polyline points="12 19 5 12 12 5"></polyline>
+                    </svg>
                 </button>
             </header>
 

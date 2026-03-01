@@ -1,6 +1,7 @@
 'use client';
 
-import { Quiz, QuizChoice } from '@/lib/api/quiz';
+import { Lightbulb, BookOpenCheck, Circle, X } from 'lucide-react';
+import { Quiz } from '@/lib/api/quiz';
 import { MultipleChoice } from './MultipleChoice';
 import { TrueFalse } from './TrueFalse';
 import { ChoiceBlank } from './ChoiceBlank';
@@ -12,6 +13,7 @@ interface QuizContentProps {
     onSelectChoice: (choiceId: number) => void;
     onSetBlank: (position: number, choiceId: number) => void;
     isChecked: boolean;
+    isCorrect?: boolean;
     showHint: boolean;
     showExplanation: boolean;
     onToggleHint: () => void;
@@ -27,6 +29,7 @@ export function QuizContent({
     onSelectChoice,
     onSetBlank,
     isChecked,
+    isCorrect,
     showHint,
     showExplanation,
     onToggleHint,
@@ -90,11 +93,9 @@ export function QuizContent({
                     style={{
                         display: 'inline-block',
                         padding: '4px 10px',
-                        backgroundColor: quiz.quizType === 'truefalse' ? '#dbeafe' :
-                            quiz.quizType === 'choiceblank' ? '#fef3c7' : '#f3e8ff',
-                        color: quiz.quizType === 'truefalse' ? '#1d4ed8' :
-                            quiz.quizType === 'choiceblank' ? '#92400e' : '#7c3aed',
-                        borderRadius: '6px',
+                        backgroundColor: '#E5E7EB',
+                        color: '#6B7280',
+                        borderRadius: '9999px',
                         fontSize: '12px',
                         fontWeight: 'bold',
                     }}
@@ -106,10 +107,10 @@ export function QuizContent({
             {/* 질문 */}
             <div>
                 <h2 style={{
-                    fontSize: '18px',
+                    fontSize: '20px',
                     fontWeight: 'bold',
-                    color: '#1f2937',
-                    lineHeight: '1.6',
+                    color: '#1F2937',
+                    lineHeight: '1.5',
                 }}>
                     {quiz.question}
                 </h2>
@@ -119,16 +120,15 @@ export function QuizContent({
             {quiz.quizType !== 'choiceblank' && quiz.passage && (
                 <div
                     style={{
-                        backgroundColor: '#f9fafb',
+                        backgroundColor: '#F3F4F6',
                         padding: '16px',
-                        borderRadius: '12px',
-                        borderLeft: '4px solid #f59e0b',
+                        borderRadius: '8px',
                     }}
                 >
                     <p style={{
                         fontSize: '15px',
-                        color: '#4b5563',
-                        lineHeight: '1.7',
+                        color: '#374151',
+                        lineHeight: '1.6',
                         whiteSpace: 'pre-wrap',
                     }}>
                         {quiz.passage}
@@ -141,71 +141,97 @@ export function QuizContent({
                 {renderQuizType()}
             </div>
 
-            {/* 힌트 버튼 & 내용 */}
-            {quiz.hint && (
-                <div>
-                    <button
-                        onClick={onToggleHint}
-                        style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '6px',
-                            padding: '8px 12px',
-                            backgroundColor: showHint ? '#fef3c7' : '#f3f4f6',
-                            border: 'none',
-                            borderRadius: '8px',
-                            cursor: 'pointer',
-                            fontSize: '14px',
-                            color: '#6b7280',
-                        }}
-                    >
-                        <span>💡</span>
-                        <span>{showHint ? '힌트 숨기기' : '힌트 보기'}</span>
-                    </button>
-                    {showHint && (
-                        <div
+            {/* 힌트 및 정오답 (Flex) / 해설 영역 */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {/* 힌트 버튼 & 정답 여부 (Flex 컨테이너) */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    {/* 좌측: 힌트 버튼 */}
+                    {quiz.hint ? (
+                        <button
+                            onClick={onToggleHint}
                             style={{
-                                marginTop: '12px',
-                                padding: '12px 16px',
-                                backgroundColor: '#fef3c7',
-                                borderRadius: '8px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                                padding: '4px',
+                                background: 'none',
+                                border: 'none',
+                                cursor: 'pointer',
                                 fontSize: '14px',
-                                color: '#92400e',
+                                fontWeight: 'bold',
+                                color: '#9CA3AF',
                             }}
                         >
-                            {quiz.hint}
+                            <Lightbulb size={16} color="#FF8400" />
+                            <span>힌트</span>
+                        </button>
+                    ) : <div />} {/* 힌트 없는 경우 자리 차지용 */}
+
+                    {/* 우측: 정오답 텍스트 (결과 확인 시) */}
+                    {isChecked && isCorrect !== undefined && (
+                        <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            fontSize: '14px',
+                            fontWeight: 'bold',
+                            color: isCorrect ? '#38D2E3' : '#FB84C5'
+                        }}>
+                            {isCorrect ? (
+                                <>
+                                    <Circle size={16} color="#38D2E3" strokeWidth={2.5} />
+                                    <span>정답입니다.</span>
+                                </>
+                            ) : (
+                                <>
+                                    <X size={16} color="#FB84C5" strokeWidth={2.5} />
+                                    <span>오답입니다.</span>
+                                </>
+                            )}
                         </div>
                     )}
                 </div>
-            )}
 
-            {/* 해설 (정답 확인 후) */}
-            {isChecked && showExplanation && quiz.explanation && (
-                <div
-                    style={{
-                        padding: '16px',
-                        backgroundColor: '#eff6ff',
-                        borderRadius: '12px',
-                        borderLeft: '4px solid #3b82f6',
-                    }}
-                >
-                    <p style={{
-                        fontSize: '12px',
-                        color: '#3b82f6',
-                        fontWeight: 'bold',
-                        marginBottom: '8px',
-                    }}>
-                        📖 해설
-                    </p>
-                    <p style={{
-                        fontSize: '14px',
-                        color: '#1e40af',
-                        lineHeight: '1.6',
-                    }}>
-                        {quiz.explanation}
-                    </p>
-                </div>
-            )}
+                {/* 힌트 / 해설 내용 박스 */}
+                {(showHint || isChecked) && (
+                    <div
+                        style={{
+                            padding: '16px',
+                            backgroundColor: isChecked ? '#DAF5FF' : '#FFEEDB', // 해설은 항상 정답과 동일한 바탕색, 힌트는 #FFEEDB
+                            borderRadius: '8px',
+                            fontSize: '14px',
+                            lineHeight: '1.6',
+                            color: '#374151',
+                        }}
+                    >
+                        {/* 해설이 먼저 있으면 해설 노출 (정답 확인 후) */}
+                        {isChecked && quiz.explanation && (
+                            <div>
+                                <div style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '6px',
+                                    color: '#38D2E3', // 오답일 때도 정답일 때와 동일하게 유지
+                                    fontWeight: 'bold',
+                                    marginBottom: '8px'
+                                }}>
+                                    <BookOpenCheck size={18} />
+                                    <span>해설</span>
+                                </div>
+                                <div style={{ color: '#374151' }}>{quiz.explanation}</div>
+                            </div>
+                        )}
+
+                        {/* 정답 확인 전이거나 해설이 없지만 힌트를 눌렀을 경우 힌트 노출 */}
+                        {(!isChecked || (!quiz.explanation && quiz.hint)) && showHint && quiz.hint && (
+                            <div style={{ marginTop: isChecked && quiz.explanation ? '12px' : '0' }}>
+                                {/* 전구 아이콘과 "힌트" 제목 제거 */}
+                                <div style={{ color: '#374151' }}>{quiz.hint}</div>
+                            </div>
+                        )}
+                    </div>
+                )}
+            </div>
         </div>
     );
 }

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { Check, X } from 'lucide-react';
 import { QuizChoice } from '@/lib/api/quiz';
 
 interface ChoiceBlankProps {
@@ -11,6 +12,15 @@ interface ChoiceBlankProps {
     onSetBlank: (position: number, choiceId: number) => void;
     isChecked: boolean;
 }
+
+// 색상 상수
+const COLOR = {
+    correct: { bg: '#EFF6FF', border: '#3B82F6', text: '#2563EB' },
+    wrong: { bg: '#FEF2F2', border: '#EF4444', text: '#DC2626' },
+    selected: { bg: '#3B82F6', border: '#3B82F6', text: '#ffffff' }, // 빈칸이 채워졌을 때
+    active: { bg: '#EFF6FF', border: '#3B82F6', text: '#2563EB' }, // 빈칸을 클릭해서 활성화했을 때
+    default: { bg: '#ffffff', border: '#3B82F6', text: '#3B82F6' }, // 기본 빈칸
+};
 
 /**
  * 빈칸 채우기 퀴즈 컴포넌트
@@ -26,17 +36,14 @@ export function ChoiceBlank({
     const [selectedChoice, setSelectedChoice] = useState<number | null>(null);
     const [activeBlank, setActiveBlank] = useState<number | null>(null);
 
-    // 빈칸 클릭 시 - 선택된 보기가 있으면 채우고, 없으면 활성화
+    // 빈칸 클릭 시
     const handleBlankClick = (position: number) => {
         if (isChecked) return;
-
         if (selectedChoice !== null) {
-            // 선택된 보기가 있으면 빈칸 채우기
             onSetBlank(position, selectedChoice);
             setSelectedChoice(null);
             setActiveBlank(null);
         } else {
-            // 선택된 보기가 없으면 빈칸 활성화
             setActiveBlank(activeBlank === position ? null : position);
         }
     };
@@ -44,29 +51,23 @@ export function ChoiceBlank({
     // 보기 클릭 시
     const handleChoiceClick = (choiceId: number) => {
         if (isChecked) return;
-
-        // 활성화된 빈칸이 있으면 바로 채우기
         if (activeBlank !== null) {
             onSetBlank(activeBlank, choiceId);
             setActiveBlank(null);
             setSelectedChoice(null);
         } else {
-            // 활성화된 빈칸이 없으면 보기 선택 상태 토글
             setSelectedChoice(choiceId === selectedChoice ? null : choiceId);
         }
     };
 
-    // 빈칸 초기화 (이미 채워진 빈칸 클릭 시)
+    // 빈칸 초기화
     const handleClearBlank = (position: number) => {
         if (isChecked) return;
-        // 빈칸을 다시 클릭하면 비우기 (0을 보내서 리셋)
-        // 실제로는 Map에서 삭제해야 하므로 부모 컴포넌트에서 처리
         setActiveBlank(position);
     };
 
     // 지문에서 빈칸 패턴을 찾아서 렌더링
     const renderPassageWithBlanks = () => {
-        // (  ①  ), (  ②  ) 또는 _____ 패턴을 찾음
         const blankPattern = /\(\s*[①②③④⑤⑥⑦⑧⑨⑩]\s*\)|_____/g;
         const parts: (string | { type: 'blank'; position: number })[] = [];
         let lastIndex = 0;
@@ -98,29 +99,17 @@ export function ChoiceBlank({
             const isActive = activeBlank === position;
 
             // 스타일 결정
-            let backgroundColor = '#f3f4f6';
-            let borderColor = '#9ca3af';
-            let textColor = '#9ca3af';
+            let colors = COLOR.default;
+            let resultIcon: 'correct' | 'wrong' | null = null;
 
             if (isChecked && filledChoice) {
-                const isCorrect = filledChoiceId === correctChoice?.id;
-                if (isCorrect) {
-                    backgroundColor = '#dcfce7';
-                    borderColor = '#16a34a';
-                    textColor = '#16a34a';
-                } else {
-                    backgroundColor = '#fef2f2';
-                    borderColor = '#dc2626';
-                    textColor = '#dc2626';
-                }
+                const isCorrectAnswer = filledChoiceId === correctChoice?.id;
+                colors = isCorrectAnswer ? COLOR.correct : COLOR.wrong;
+                resultIcon = isCorrectAnswer ? 'correct' : 'wrong';
             } else if (filledChoice) {
-                backgroundColor = '#fef3c7';
-                borderColor = '#f59e0b';
-                textColor = '#92400e';
+                colors = COLOR.selected;
             } else if (isActive) {
-                backgroundColor = '#dbeafe';
-                borderColor = '#3b82f6';
-                textColor = '#1d4ed8';
+                colors = COLOR.active;
             }
 
             const circledNumbers = ['①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧', '⑨', '⑩'];
@@ -132,24 +121,28 @@ export function ChoiceBlank({
                         ? handleClearBlank(position)
                         : handleBlankClick(position)}
                     disabled={isChecked}
+                    className="quiz-hover"
                     style={{
                         display: 'inline-flex',
                         alignItems: 'center',
                         justifyContent: 'center',
+                        gap: '6px',
                         minWidth: '80px',
-                        padding: '4px 12px',
+                        padding: '6px 14px',
                         margin: '0 4px',
-                        backgroundColor,
-                        border: `2px ${isActive ? 'solid' : 'dashed'} ${borderColor}`,
-                        borderRadius: '8px',
+                        backgroundColor: colors.bg,
+                        border: `2px ${isActive || filledChoice ? 'solid' : 'dashed'} ${colors.border}`,
+                        borderRadius: '12px',
                         cursor: isChecked ? 'default' : 'pointer',
-                        fontSize: '14px',
+                        fontSize: '15px',
                         fontWeight: 'bold',
-                        color: textColor,
+                        color: colors.text,
                         transition: 'all 0.2s ease',
                     }}
                 >
                     {filledChoice ? filledChoice.choiceText : circledNumbers[position - 1] || `(${position})`}
+                    {resultIcon === 'correct' && <Check size={16} color="#3B82F6" strokeWidth={3} />}
+                    {resultIcon === 'wrong' && <X size={16} color="#EF4444" strokeWidth={3} />}
                 </button>
             );
         });
@@ -165,11 +158,12 @@ export function ChoiceBlank({
                 <div
                     style={{
                         padding: '12px 16px',
-                        backgroundColor: activeBlank ? '#dbeafe' : selectedChoice ? '#fef3c7' : '#f3f4f6',
-                        borderRadius: '8px',
-                        fontSize: '13px',
-                        color: activeBlank ? '#1d4ed8' : selectedChoice ? '#92400e' : '#6b7280',
+                        backgroundColor: activeBlank ? '#EFF6FF' : selectedChoice ? '#EFF6FF' : '#F3F4F6',
+                        borderRadius: '12px',
+                        fontSize: '14px',
+                        color: activeBlank ? '#2563EB' : selectedChoice ? '#2563EB' : '#6B7280',
                         textAlign: 'center',
+                        fontWeight: '500',
                     }}
                 >
                     {activeBlank
@@ -196,8 +190,8 @@ export function ChoiceBlank({
             {/* 보기 목록 */}
             <div>
                 <p style={{
-                    fontSize: '12px',
-                    color: '#6b7280',
+                    fontSize: '13px',
+                    color: '#6B7280',
                     marginBottom: '12px',
                     fontWeight: 'bold',
                 }}>
@@ -206,7 +200,7 @@ export function ChoiceBlank({
                 <div style={{
                     display: 'flex',
                     flexWrap: 'wrap',
-                    gap: '8px'
+                    gap: '10px'
                 }}>
                     {choices.map((choice) => {
                         const isUsed = usedChoiceIds.includes(choice.id);
@@ -217,26 +211,27 @@ export function ChoiceBlank({
                                 key={choice.id}
                                 onClick={() => handleChoiceClick(choice.id)}
                                 disabled={isChecked || isUsed}
+                                className={isChecked || isUsed ? '' : 'quiz-hover'}
                                 style={{
-                                    padding: '10px 18px',
+                                    padding: '12px 20px',
                                     backgroundColor: isSelectedNow
-                                        ? '#f59e0b'
+                                        ? '#EFF6FF'
                                         : isUsed
-                                            ? '#e5e7eb'
-                                            : '#ffffff',
+                                            ? '#ffffff'
+                                            : '#F3F4F6',
                                     color: isSelectedNow
-                                        ? '#ffffff'
+                                        ? '#2563EB'
                                         : isUsed
-                                            ? '#9ca3af'
+                                            ? '#9CA3AF'
                                             : '#374151',
-                                    border: `2px solid ${isSelectedNow ? '#f59e0b' : '#e5e7eb'}`,
-                                    borderRadius: '8px',
+                                    border: `2px solid ${isSelectedNow ? '#3B82F6' : isUsed ? '#E5E7EB' : 'transparent'}`,
+                                    borderRadius: '9999px', // 캡슐 모양
                                     cursor: isChecked || isUsed ? 'default' : 'pointer',
-                                    fontSize: '14px',
+                                    fontSize: '15px',
                                     fontWeight: '500',
                                     textDecoration: isUsed ? 'line-through' : 'none',
-                                    transition: 'all 0.2s ease',
                                     opacity: isUsed ? 0.6 : 1,
+                                    transition: 'all 0.2s ease',
                                 }}
                             >
                                 {choice.choiceText}

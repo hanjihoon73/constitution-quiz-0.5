@@ -28,11 +28,13 @@ export default function QuizPage() {
         showExplanation,
         isLoading,
         error,
+        isFirstQuiz,
         isLastQuiz,
         selectChoice,
         setBlankAnswer,
         checkAnswer,
         goToNext,
+        goToPrev,
         goToQuiz,
         toggleHint,
         saveProgress,
@@ -144,6 +146,7 @@ export default function QuizPage() {
                     onSelectChoice={selectChoice}
                     onSetBlank={setBlankAnswer}
                     isChecked={isChecked}
+                    isCorrect={currentAnswer?.isCorrect}
                     showHint={showHint}
                     showExplanation={showExplanation}
                     onToggleHint={toggleHint}

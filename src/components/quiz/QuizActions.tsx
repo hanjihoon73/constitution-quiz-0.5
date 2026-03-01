@@ -23,40 +23,43 @@ export function QuizActions({
     return (
         <div
             style={{
+                display: 'flex',
                 padding: '16px 20px',
-                borderTop: '1px solid #f3f4f6',
-                backgroundColor: '#ffffff',
+                borderTop: '1px solid #F3F4F6',
+                backgroundColor: '#FFFFFF',
             }}
         >
+            {/* 정답 확인 / 다음(완료) 꽉 찬 버튼 1개 */}
             {!isChecked ? (
-                // 정답 확인 전
+                // 정답 확인 전 (선택 여부에 따라 스타일 변경)
                 <button
                     onClick={onCheckAnswer}
                     disabled={!hasAnswer}
                     style={{
-                        width: '100%',
+                        flex: 1,
                         padding: '16px',
-                        backgroundColor: hasAnswer ? '#f59e0b' : '#e5e7eb',
-                        color: hasAnswer ? '#ffffff' : '#9ca3af',
+                        backgroundColor: hasAnswer ? '#2D2D2D' : '#F3F4F6',
+                        color: hasAnswer ? '#FF8400' : '#9CA3AF',
                         border: 'none',
                         borderRadius: '12px',
                         fontSize: '16px',
                         fontWeight: 'bold',
-                        cursor: hasAnswer ? 'pointer' : 'not-allowed',
+                        cursor: hasAnswer ? 'pointer' : 'default',
                         transition: 'all 0.2s ease',
                     }}
                 >
                     정답 확인
                 </button>
             ) : (
-                // 정답 확인 후
+                // 결과 확인 후
                 <button
                     onClick={isLastQuiz ? onComplete : onNext}
+                    className="quiz-hover"
                     style={{
-                        width: '100%',
+                        flex: 1,
                         padding: '16px',
-                        backgroundColor: isLastQuiz ? '#22c55e' : '#3b82f6',
-                        color: '#ffffff',
+                        backgroundColor: '#FF8400',
+                        color: '#FFFFFF',
                         border: 'none',
                         borderRadius: '12px',
                         fontSize: '16px',
@@ -65,7 +68,7 @@ export function QuizActions({
                         transition: 'all 0.2s ease',
                     }}
                 >
-                    {isLastQuiz ? '퀴즈 완료' : '다음 문제'}
+                    {isLastQuiz ? '퀴즈 완료' : '다음 퀴즈'}
                 </button>
             )}
         </div>

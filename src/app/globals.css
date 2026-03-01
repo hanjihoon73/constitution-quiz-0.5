@@ -357,3 +357,22 @@ body {
 .toaster [data-sonner-toast] [data-icon] {
   display: none !important;
 }
+
+/* ========================================
+   퀴즈 컴포넌트 인터랙션 효과
+   ======================================== */
+
+/* 퀴즈 버튼 hover: 살짝 뜨면서 그림자 */
+.quiz-hover {
+  transition: transform 0.18s ease, box-shadow 0.18s ease !important;
+}
+
+.quiz-hover:hover:not(:disabled) {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12) !important;
+}
+
+.quiz-hover:active:not(:disabled) {
+  transform: translateY(0) !important;
+  box-shadow: none !important;
+}

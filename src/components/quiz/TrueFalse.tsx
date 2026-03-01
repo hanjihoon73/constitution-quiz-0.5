@@ -1,46 +1,46 @@
 'use client';
 
+import { Circle, X } from 'lucide-react';
 import { QuizChoice } from '@/lib/api/quiz';
 
 interface TrueFalseProps {
-    choices: QuizChoice[];
+    choices: QuizChoice[]
     selectedIds: number[];
     onSelect: (choiceId: number) => void;
     isChecked: boolean;
 }
 
+// 색상 상수
+const COLOR = {
+    correct: { bg: '#3B82F6', border: '#3B82F6', icon: '#ffffff', text: '#ffffff' },
+    wrong: { bg: '#EF4444', border: '#EF4444', icon: '#ffffff', text: '#ffffff' },
+    selected: { bg: '#3B82F6', border: '#3B82F6', icon: '#ffffff', text: '#ffffff' },
+    default: { bg: '#F3F4F6', border: '#E5E7EB', icon: '#9CA3AF', text: '#6B7280' },
+};
+
 /**
  * OX (참/거짓) 퀴즈 컴포넌트
  */
 export function TrueFalse({ choices, selectedIds, onSelect, isChecked }: TrueFalseProps) {
-    // 보기 정렬 (맞아요가 먼저)
     const sortedChoices = [...choices].sort((a, b) => a.choiceOrder - b.choiceOrder);
 
     return (
-        <div style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
+        <div style={{ display: 'flex', gap: '16px', justifyContent: 'space-between' }}>
             {sortedChoices.map((choice) => {
                 const isSelected = selectedIds.includes(choice.id);
                 const isTrue = choice.choiceText.includes('맞') || choice.choiceText === 'O';
 
-                // 상태에 따른 스타일
-                let backgroundColor = '#ffffff';
-                let borderColor = '#e5e7eb';
-                let textColor = '#374151';
+                // 상태에 따른 색상 결정
+                let colors = COLOR.default;
 
                 if (isChecked) {
                     if (choice.isCorrect) {
-                        backgroundColor = '#dcfce7';
-                        borderColor = '#16a34a';
-                        textColor = '#16a34a';
+                        colors = COLOR.correct;
                     } else if (isSelected && !choice.isCorrect) {
-                        backgroundColor = '#fef2f2';
-                        borderColor = '#dc2626';
-                        textColor = '#dc2626';
+                        colors = COLOR.wrong;
                     }
                 } else if (isSelected) {
-                    backgroundColor = isTrue ? '#dcfce7' : '#fef2f2';
-                    borderColor = isTrue ? '#16a34a' : '#dc2626';
-                    textColor = isTrue ? '#16a34a' : '#dc2626';
+                    colors = COLOR.selected;
                 }
 
                 return (
@@ -48,31 +48,41 @@ export function TrueFalse({ choices, selectedIds, onSelect, isChecked }: TrueFal
                         key={choice.id}
                         onClick={() => !isChecked && onSelect(choice.id)}
                         disabled={isChecked}
+                        className={isChecked ? '' : 'quiz-hover'}
                         style={{
-                            width: '120px',
-                            height: '120px',
-                            backgroundColor,
-                            border: `3px solid ${borderColor}`,
+                            flex: 1, // 가로 2분할
+                            height: '140px',
+                            backgroundColor: colors.bg,
+                            border: `2px solid ${colors.border}`,
                             borderRadius: '16px',
                             cursor: isChecked ? 'default' : 'pointer',
                             display: 'flex',
                             flexDirection: 'column',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            gap: '8px',
+                            gap: '12px',
                             transition: 'all 0.2s ease',
                         }}
                     >
+                        {/* O / X 아이콘 */}
+                        {isTrue ? (
+                            <Circle
+                                size={56}
+                                color={colors.icon}
+                                strokeWidth={3}
+                            />
+                        ) : (
+                            <X
+                                size={56}
+                                color={colors.icon}
+                                strokeWidth={3}
+                            />
+                        )}
+
                         <span style={{
-                            fontSize: '40px',
-                            filter: isSelected || isChecked ? 'none' : 'grayscale(100%)',
-                        }}>
-                            {isTrue ? '⭕' : '❌'}
-                        </span>
-                        <span style={{
-                            fontSize: '16px',
+                            fontSize: '18px',
                             fontWeight: 'bold',
-                            color: textColor,
+                            color: colors.text,
                         }}>
                             {choice.choiceText}
                         </span>
