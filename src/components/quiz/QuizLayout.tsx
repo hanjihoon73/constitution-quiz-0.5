@@ -34,7 +34,7 @@ export function QuizLayout({ children, onExit }: QuizLayoutProps) {
             {/* 헤더 */}
             <header
                 style={{
-                    padding: '16px 24px',
+                    padding: '16px 20px 10px 20px',
                     display: 'flex',
                     alignItems: 'center',
                 }}

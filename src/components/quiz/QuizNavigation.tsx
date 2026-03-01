@@ -21,7 +21,7 @@ export function QuizNavigation({ total, current, answers, quizIds, onNavigate }:
             style={{
                 display: 'flex',
                 justifyContent: 'center',
-                padding: '16px 24px',
+                padding: '10px 20px 16px 20px',
                 borderBottom: '1px solid #F3F4F6',
             }}
         >
@@ -29,9 +29,9 @@ export function QuizNavigation({ total, current, answers, quizIds, onNavigate }:
                 style={{
                     display: 'flex',
                     gap: '8px',
-                    padding: '8px 16px',
+                    padding: '8px 24px',
                     overflowX: 'auto',
-                    border: '1px solid #E5E7EB',
+                    border: '1px solid #D2D2D2',
                     borderRadius: '9999px',
                     scrollbarWidth: 'none', // Firefox
                     msOverflowStyle: 'none', // IE and Edge
@@ -45,8 +45,8 @@ export function QuizNavigation({ total, current, answers, quizIds, onNavigate }:
 
                     // 기본 상태: 투명 배경, 연한 회색 테두리, 회색 번호 텍스트
                     let bgColor = 'transparent';
-                    let borderColor = '#E5E7EB';
-                    let textColor = '#9CA3AF';
+                    let borderColor = '#D2D2D2';
+                    let textColor = '#D2D2D2';
 
                     if (isCurrent && !answer) {
                         // 현재 진행 중 (미해결): 다크 그레이 배경, 오렌지 번호 텍스트

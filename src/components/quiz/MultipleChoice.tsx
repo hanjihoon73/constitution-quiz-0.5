@@ -12,11 +12,11 @@ interface MultipleChoiceProps {
 
 // 색상 상수
 const COLOR = {
-    correct: { bg: '#DAF5FF', border: '#38D2E3', text: '#0E7490' }, // 정답 결과 (선택한 정답)
-    wrong: { bg: '#FEE6F3', border: '#FB84C5', text: '#BE185D' }, // 오답 결과 (선택한 오답)
+    correct: { bg: '#DAF5FF', border: '#38D2E3', text: '#374151' }, // 정답 결과 (선택한 정답)
+    wrong: { bg: '#FEE6F3', border: '#FB84C5', text: '#374151' }, // 오답 결과 (선택한 오답)
     selected: { bg: '#FFEEDB', border: '#FF8400', text: '#374151' }, // 선택 상태
     default: { bg: '#ffffff', border: '#E5E7EB', text: '#374151' }, // 기본 상태
-    correct_unselected: { bg: '#DAF5FF', border: '#38D2E3', text: '#0E7490' } // 정답 결과 (선택 안한 정답)
+    correct_unselected: { bg: '#DAF5FF', border: '#38D2E3', text: '#374151' } // 정답 결과 (선택 안한 정답)
 };
 
 /**
