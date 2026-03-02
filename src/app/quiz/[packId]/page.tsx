@@ -130,17 +130,19 @@ export default function QuizPage() {
         <QuizLayout
             onExit={handleExit}
             navigation={
-                <QuizNavigation
-                    total={progress.total}
-                    current={progress.current}
-                    answers={answers}
-                    quizIds={packData.quizzes.map(q => q.id)}
-                    onNavigate={goToQuiz}
-                />
+                <div key={`nav-${currentQuiz.id}`}>
+                    <QuizNavigation
+                        total={progress.total}
+                        current={progress.current}
+                        answers={answers}
+                        quizIds={packData.quizzes.map(q => q.id)}
+                        onNavigate={goToQuiz}
+                    />
+                </div>
             }
         >
             {/* 퀴즈 콘텐츠 */}
-            <div style={{ flex: 1, overflow: 'auto' }}>
+            <div key={`content-${currentQuiz.id}`} style={{ flex: 1, overflow: 'auto' }}>
                 <QuizContent
                     quiz={currentQuiz}
                     selectedIds={selectedIds}
@@ -156,14 +158,16 @@ export default function QuizPage() {
             </div>
 
             {/* 하단 버튼 */}
-            <QuizActions
-                isChecked={isChecked}
-                isLastQuiz={isLastQuiz}
-                hasAnswer={hasAnswer}
-                onCheckAnswer={handleCheckAnswer}
-                onNext={goToNext}
-                onComplete={handleComplete}
-            />
+            <div key={`actions-${currentQuiz.id}`} className="animate-fade-in-up" style={{ animationDelay: '600ms' }}>
+                <QuizActions
+                    isChecked={isChecked}
+                    isLastQuiz={isLastQuiz}
+                    hasAnswer={hasAnswer}
+                    onCheckAnswer={handleCheckAnswer}
+                    onNext={goToNext}
+                    onComplete={handleComplete}
+                />
+            </div>
         </QuizLayout>
     );
 }

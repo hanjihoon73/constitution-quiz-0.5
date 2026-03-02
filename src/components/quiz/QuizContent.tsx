@@ -88,7 +88,7 @@ export function QuizContent({
     return (
         <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
             {/* 퀴즈 유형 라벨 */}
-            <div>
+            <div className="animate-fade-in-up delay-100">
                 <span
                     style={{
                         display: 'inline-block',
@@ -105,7 +105,7 @@ export function QuizContent({
             </div>
 
             {/* 질문 */}
-            <div style={{ padding: '0 12px' }}>
+            <div className="animate-fade-in-up delay-200" style={{ padding: '0 12px' }}>
                 <h2 style={{
                     fontSize: '18px',
                     fontWeight: 'bold',
@@ -119,7 +119,9 @@ export function QuizContent({
             {/* 지문 (빈칸채우기가 아닌 경우에만) */}
             {quiz.quizType !== 'choiceblank' && quiz.passage && (
                 <div
+                    className="animate-fade-in-up"
                     style={{
+                        animationDelay: '300ms',
                         backgroundColor: '#F3F4F6',
                         padding: '16px',
                         borderRadius: '8px',
@@ -137,12 +139,12 @@ export function QuizContent({
             )}
 
             {/* 보기 영역 */}
-            <div style={{ marginTop: '8px' }}>
+            <div className="animate-fade-in-up" style={{ marginTop: '8px', animationDelay: quiz.passage && quiz.quizType !== 'choiceblank' ? '400ms' : '300ms' }}>
                 {renderQuizType()}
             </div>
 
             {/* 힌트 및 정오답 (Flex) / 해설 영역 */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div className="animate-fade-in-up" style={{ display: 'flex', flexDirection: 'column', gap: '8px', animationDelay: quiz.passage && quiz.quizType !== 'choiceblank' ? '500ms' : '400ms' }}>
                 {/* 힌트 버튼 & 정답 여부 (Flex 컨테이너) */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     {/* 좌측: 힌트 버튼 */}
