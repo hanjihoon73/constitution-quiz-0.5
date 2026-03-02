@@ -2,13 +2,12 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import {
     Dialog,
     DialogContent,
     DialogHeader,
     DialogTitle,
-    DialogDescription,
-    DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { deleteUserAccount } from '@/lib/api/user';
@@ -59,50 +58,48 @@ export function WithdrawDialog({
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent
-                className="sm:max-w-md bg-white rounded-2xl border-none shadow-xl"
-                showCloseButton={false}
+                className="sm:max-w-md bg-white rounded-3xl border-none shadow-xl px-8 py-12 max-w-[340px]"
+                onOpenAutoFocus={(e) => e.preventDefault()}
+                showCloseButton={true}
             >
-                <DialogHeader className="text-center space-y-3 pt-6">
-                    {/* 슬픈 표정 아이콘 */}
-                    <div className="flex justify-center">
-                        <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center">
-                            <span className="text-5xl">😢</span>
-                        </div>
+                <DialogHeader className="flex flex-col items-center gap-1 text-center">
+                    <div className="flex justify-center mb-3">
+                        <Image src="/bi-constitution-quiz-symbol.svg" alt="symbol" width={72} height={72} className="w-[72px] h-[72px]" />
                     </div>
-                    <DialogTitle className="text-xl font-bold text-gray-800">
-                        정말 떠나시나요?
+                    <DialogTitle className="text-[20px] font-bold text-[#111111] mb-2">
+                        모두의 헌법을 정말 떠나시나요?
                     </DialogTitle>
-                    <DialogDescription className="text-center text-gray-600 leading-relaxed px-2">
-                        <span className="font-semibold text-gray-800">{nickname}</span>님이 지금 탈퇴하시면
+                    <p className="text-[#888888] text-[15px] font-medium leading-relaxed text-center">
+                        <span className="text-[#888888]">{nickname}님이 지금 탈퇴하시면</span>
                         <br />
                         대한민국의 헌법 수호력이 크게 약해집니다.
                         <br />
                         <br />
-                        부디 헌법을 지키기 위해
+                        부디 우리 <span className="font-bold text-[#888888]">모두의 헌법을 지키기 위해</span>
                         <br />
-                        힘을 보태주세요!
-                    </DialogDescription>
+                        계속 힘을 보태주세요!
+                    </p>
                 </DialogHeader>
 
-                <DialogFooter className="flex flex-col gap-3 p-6 pt-4 sm:flex-col">
+                <div className="flex flex-col gap-3 mt-6">
                     <Button
                         type="button"
-                        className="w-full bg-[#FF8400] hover:bg-[#e67700] text-white font-bold py-3 text-lg rounded-xl shadow-md transition-all active:scale-95"
+                        className="w-full h-[52px] bg-[#2D2D2D] hover:bg-[#1a1a1a] text-[#FF8400] font-medium text-[16px] rounded-[14px] transition-all hover:-translate-y-0.5 hover:shadow-md cursor-pointer"
                         onClick={() => onOpenChange(false)}
                         disabled={isDeleting}
                     >
-                        알겠어
+                        힘을 보탤게요
                     </Button>
                     <Button
                         type="button"
                         variant="ghost"
-                        className="w-full text-gray-400 hover:text-gray-600 font-medium py-3 text-base"
+                        className="w-full h-[52px] bg-[#F3F4F6] hover:bg-[#E5E7EB] text-[#888888] font-medium text-[16px] rounded-[14px] border border-[#E5E7EB] transition-all hover:-translate-y-0.5 hover:shadow-md cursor-pointer"
                         onClick={handleWithdraw}
                         disabled={isDeleting}
                     >
-                        {isDeleting ? '처리 중...' : '탈퇴할래'}
+                        {isDeleting ? '처리 중...' : '그냥 탈퇴할래요'}
                     </Button>
-                </DialogFooter>
+                </div>
             </DialogContent>
         </Dialog>
     );
