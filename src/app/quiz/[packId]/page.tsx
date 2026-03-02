@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useQuiz } from '@/hooks/useQuiz';
 import {
@@ -42,13 +42,33 @@ export default function QuizPage() {
         completeQuizPack,
     } = useQuiz(packId, { isRestart });
 
+    // 사운드 객체 사전 로딩용 레퍼런스
+    const correctAudioRef = useRef<HTMLAudioElement | null>(null);
+    const wrongAudioRef = useRef<HTMLAudioElement | null>(null);
+
+    // 컴포넌트 마운트 시 오디오 미리 로드
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            const correctAudio = new Audio('/sounds/correct.wav');
+            correctAudio.preload = 'auto'; // 최대한 미리 다운로드
+            correctAudioRef.current = correctAudio;
+
+            const wrongAudio = new Audio('/sounds/wrong.wav');
+            wrongAudio.preload = 'auto'; // 최대한 미리 다운로드
+            wrongAudioRef.current = wrongAudio;
+        }
+    }, []);
+
     // 정답 확인 핸들러
     const handleCheckAnswer = useCallback(() => {
         const isCorrect = checkAnswer();
 
         // 정오답 사운드 재생
-        const audio = new Audio(isCorrect ? '/sounds/correct.wav' : '/sounds/wrong.wav');
-        audio.play().catch(() => { }); // 재생 실패 시 무시
+        const audio = isCorrect ? correctAudioRef.current : wrongAudioRef.current;
+        if (audio) {
+            audio.currentTime = 0; // 즉각적인 재생을 위해 시간을 0으로 초기화
+            audio.play().catch(() => { }); // 재생 실패 시 무시
+        }
     }, [checkAnswer]);
 
     // 퀴즈 완료 핸들러
