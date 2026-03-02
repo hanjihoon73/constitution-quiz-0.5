@@ -196,11 +196,21 @@ export default function OnboardingPage() {
             const { data, error: insertError } = await supabase
                 .from('users')
                 .insert(insertPayload)
-                .select();
+                .select()
+                .single();
 
             if (insertError) {
                 console.error('[온보딩] Insert 에러 발생!', insertError);
                 throw insertError;
+            }
+
+            if (data) {
+                // 회원가입 완료에 따른 최초 로그인 기록 추가
+                await supabase.from('user_login_history').insert({
+                    user_id: data.id,
+                    provider: data.provider,
+                    action: 'login'
+                });
             }
 
             // 저장 성공! 전체 페이지를 새로고침하여 AuthProvider가 dbUser를 확실히 로드하도록 함

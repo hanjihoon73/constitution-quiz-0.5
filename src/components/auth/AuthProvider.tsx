@@ -64,6 +64,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // 로그아웃
     const signOut = async () => {
+        if (user && dbUser) {
+            await supabase.from('user_login_history').insert({
+                user_id: dbUser.id,
+                provider: dbUser.provider,
+                action: 'logout'
+            });
+        }
         await supabase.auth.signOut();
         setUser(null);
         setSession(null);

@@ -332,20 +332,23 @@ export type Database = {
             }
             user_login_history: {
                 Row: {
+                    action: string
+                    created_at: string | null
                     id: number
-                    logged_in_at: string | null
                     provider: Database["public"]["Enums"]["auth_provider"]
                     user_id: number
                 }
                 Insert: {
+                    action?: string
+                    created_at?: string | null
                     id?: number
-                    logged_in_at?: string | null
                     provider: Database["public"]["Enums"]["auth_provider"]
                     user_id: number
                 }
                 Update: {
+                    action?: string
+                    created_at?: string | null
                     id?: number
-                    logged_in_at?: string | null
                     provider?: Database["public"]["Enums"]["auth_provider"]
                     user_id?: number
                 }

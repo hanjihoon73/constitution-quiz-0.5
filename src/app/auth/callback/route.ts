@@ -37,9 +37,18 @@ export async function GET(request: NextRequest) {
                 // users 테이블에서 닉네임 확인
                 const { data: existingUser } = await supabase
                     .from('users')
-                    .select('nickname')
+                    .select('nickname, id, provider')
                     .eq('provider_id', user.id)
                     .single();
+
+                if (existingUser) {
+                    // 로그인 기록 저장
+                    await supabase.from('user_login_history').insert({
+                        user_id: existingUser.id,
+                        provider: existingUser.provider,
+                        action: 'login'
+                    });
+                }
 
                 // 닉네임이 없으면 온보딩으로
                 if (!existingUser?.nickname) {

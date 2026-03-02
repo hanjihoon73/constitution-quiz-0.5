@@ -44,13 +44,14 @@ export default function LoginPage() {
         });
     };
 
-    // 인증 확인 중 or 이미 로그인 → 로고 스플래시 화면 (로고만 페이드인/아웃)
-    if (isLoading || user) {
+    // 인증 확인 중일 때: 빈 화면(배경만) 렌더링하여 깜빡임 방지
+    // 이미 로그인되어 이동 대기 중일 때: isFadingOut 상태로 페이드 아웃
+    if (user && !isFadingOut) {
         return (
             <MobileFrame className="bg-background text-foreground">
                 <div className="flex flex-1 flex-col items-center justify-center min-h-full">
-                    <div className={`transition-opacity duration-300 ${isFadingOut ? 'opacity-0' : 'animate-in fade-in duration-300'
-                        }`}>
+                    {/* 로고 스플래시 화면 */}
+                    <div className="animate-in fade-in duration-300">
                         <Image
                             src="/bi-constitution-quiz-vertical.svg"
                             alt="모두의 헌법"
@@ -65,7 +66,7 @@ export default function LoginPage() {
     }
 
     return (
-        <MobileFrame className="bg-background text-foreground animate-in fade-in duration-500">
+        <MobileFrame className={`bg-background text-foreground ${isLoading || isFadingOut ? 'opacity-0' : 'animate-in fade-in duration-500 opacity-100'}`}>
             <div className="flex flex-1 flex-col relative min-h-full">
                 {/* 메인 컨텐츠 영역 (중앙 정렬) */}
                 <div className="flex-1 flex flex-col items-center justify-center px-6">
