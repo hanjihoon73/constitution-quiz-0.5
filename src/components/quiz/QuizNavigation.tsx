@@ -19,10 +19,7 @@ export function QuizNavigation({ total, current, answers, quizIds, onNavigate }:
     return (
         <div
             style={{
-                display: 'flex',
-                justifyContent: 'center',
                 padding: '10px 20px 16px 20px',
-                // borderBottom: '1px solid #F3F4F6', // 이제 QuizLayout에서 처리하므로 주석 처리 또는 삭제
             }}
         >
             <div
@@ -35,6 +32,11 @@ export function QuizNavigation({ total, current, answers, quizIds, onNavigate }:
                     borderRadius: '9999px',
                     scrollbarWidth: 'none', // Firefox
                     msOverflowStyle: 'none', // IE and Edge
+                    width: 'fit-content',
+                    margin: '0 auto',
+                    maxWidth: '100%',
+                    WebkitOverflowScrolling: 'touch', // iOS에서 부드러운 스크롤/바운스 효과 적용
+                    overscrollBehaviorX: 'contain', // 최신 브라우저의 기본 스크롤 체인/바운스 동작 제어
                 }}
                 className="hide-scrollbar" // For custom CSS if needed
             >
