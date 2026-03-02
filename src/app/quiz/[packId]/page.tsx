@@ -17,6 +17,7 @@ export default function QuizPage() {
     const searchParams = useSearchParams();
     const packId = Number(params.packId);
     const isRestart = searchParams.get('restart') === 'true';
+    const isViewMode = searchParams.get('mode') === 'view';
 
     const {
         packData,
@@ -66,6 +67,11 @@ export default function QuizPage() {
     const handleExit = useCallback(async () => {
         await saveProgress();
     }, [saveProgress]);
+
+    // 결과 보기 모드: 데이터 저장 없이 홈으로 이동
+    const handleGoHome = useCallback(() => {
+        router.push('/');
+    }, [router]);
 
     // 로딩 중
     if (isLoading) {
@@ -129,6 +135,7 @@ export default function QuizPage() {
     return (
         <QuizLayout
             onExit={handleExit}
+            isViewMode={isViewMode}
             navigation={
                 <div key={`nav-${currentQuiz.id}`}>
                     <QuizNavigation
@@ -163,9 +170,11 @@ export default function QuizPage() {
                     isChecked={isChecked}
                     isLastQuiz={isLastQuiz}
                     hasAnswer={hasAnswer}
+                    isViewMode={isViewMode}
                     onCheckAnswer={handleCheckAnswer}
                     onNext={goToNext}
                     onComplete={handleComplete}
+                    onGoHome={handleGoHome}
                 />
             </div>
         </QuizLayout>

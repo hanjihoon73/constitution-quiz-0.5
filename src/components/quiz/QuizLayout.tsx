@@ -9,12 +9,13 @@ interface QuizLayoutProps {
     children: ReactNode;
     navigation?: ReactNode; // 네비게이션을 헤더와 묶기 위해 prop으로 분리
     onExit?: () => void;
+    isViewMode?: boolean;   // 결과 보기 모드 여부
 }
 
 /**
  * 퀴즈 화면 전체 레이아웃
  */
-export function QuizLayout({ children, navigation, onExit }: QuizLayoutProps) {
+export function QuizLayout({ children, navigation, onExit, isViewMode }: QuizLayoutProps) {
     const router = useRouter();
     const [showExitDialog, setShowExitDialog] = useState(false);
     const [isScrolled, setIsScrolled] = useState(false);
@@ -42,7 +43,11 @@ export function QuizLayout({ children, navigation, onExit }: QuizLayoutProps) {
     }, []);
 
     const handleExitClick = () => {
-        setShowExitDialog(true);
+        if (isViewMode) {
+            router.push('/');
+        } else {
+            setShowExitDialog(true);
+        }
     };
 
     const handleConfirmExit = async () => {

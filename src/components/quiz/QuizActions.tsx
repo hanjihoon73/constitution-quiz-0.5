@@ -4,9 +4,11 @@ interface QuizActionsProps {
     isChecked: boolean;
     isLastQuiz: boolean;
     hasAnswer: boolean;
+    isViewMode?: boolean;
     onCheckAnswer: () => void;
     onNext: () => void;
     onComplete: () => void;
+    onGoHome?: () => void;
 }
 
 /**
@@ -16,9 +18,11 @@ export function QuizActions({
     isChecked,
     isLastQuiz,
     hasAnswer,
+    isViewMode,
     onCheckAnswer,
     onNext,
     onComplete,
+    onGoHome,
 }: QuizActionsProps) {
     return (
         <div
@@ -53,7 +57,11 @@ export function QuizActions({
             ) : (
                 // 결과 확인 후
                 <button
-                    onClick={isLastQuiz ? onComplete : onNext}
+                    onClick={
+                        isLastQuiz
+                            ? (isViewMode && onGoHome ? onGoHome : onComplete)
+                            : onNext
+                    }
                     className="quiz-hover"
                     style={{
                         flex: 1,
@@ -68,7 +76,7 @@ export function QuizActions({
                         transition: 'all 0.2s ease',
                     }}
                 >
-                    {isLastQuiz ? '퀴즈 완료' : '다음 퀴즈'}
+                    {isLastQuiz ? (isViewMode ? '홈으로 가기' : '퀴즈 완료') : '다음 퀴즈'}
                 </button>
             )}
         </div>
