@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { MobileFrame } from '@/components/common';
 import { useAuth } from '@/components/auth';
-import { getUserQuizProgress, updateQuizpackStatistics, saveQuizpackRating, unlockNextQuizpack, resetUserQuizpack, getUserQuizpackId } from '@/lib/api/quiz';
+import { getUserQuizProgress, updateQuizpackStatistics, saveQuizpackRating, unlockNextQuizpack } from '@/lib/api/quiz';
 import { Star, Clock, ArrowLeft, PartyPopper, SearchCheck } from 'lucide-react';
 
 interface QuizResult {
@@ -114,21 +114,6 @@ export default function QuizCompletePage() {
     const handleViewResults = useCallback(() => {
         router.push(`/quiz/${packId}?mode=view`);
     }, [packId, router]);
-
-    // 다시풀기 핸들러
-    const handleRestart = useCallback(async () => {
-        if (!dbUser?.id) return;
-
-        try {
-            const userQuizpackId = await getUserQuizpackId(dbUser.id, packId);
-            if (userQuizpackId) {
-                await resetUserQuizpack(userQuizpackId);
-            }
-            router.push(`/quiz/${packId}?restart=true`);
-        } catch (err) {
-            console.error('퀴즈팩 초기화 실패:', err);
-        }
-    }, [dbUser?.id, packId, router]);
 
     // 시간 포맷팅 (MM:SS)
     const formatTime = (seconds: number) => {
@@ -370,8 +355,8 @@ export default function QuizCompletePage() {
                     style={{
                         width: '100%',
                         padding: '16px',
-                        backgroundColor: isSaving ? '#d1d5db' : '#FF8400',
-                        color: 'white',
+                        backgroundColor: isSaving ? '#d1d5db' : '#2D2D2D',
+                        color: isSaving ? '#9CA3AF' : '#FF8400',
                         border: 'none',
                         borderRadius: '12px',
                         fontSize: '16px',
@@ -382,26 +367,8 @@ export default function QuizCompletePage() {
                     {isSaving ? '저장 중...' : '다음 퀴즈팩 시작'}
                 </button>
 
-                {/* 다시풀기 + 홈으로 가기 버튼 */}
+                {/* 홈으로 가기 버튼 */}
                 <div style={{ display: 'flex', gap: '12px' }}>
-                    <button
-                        onClick={handleRestart}
-                        disabled={isSaving}
-                        className="hover:-translate-y-1 hover:shadow-lg active:scale-[0.98] transition-all duration-200"
-                        style={{
-                            flex: 1,
-                            padding: '16px',
-                            backgroundColor: '#E5E7EB',
-                            color: '#4B5563',
-                            border: 'none',
-                            borderRadius: '12px',
-                            fontSize: '16px',
-                            fontWeight: 'bold',
-                            cursor: isSaving ? 'not-allowed' : 'pointer',
-                        }}
-                    >
-                        다시 풀기
-                    </button>
                     <button
                         onClick={handleGoHome}
                         disabled={isSaving}
@@ -409,8 +376,8 @@ export default function QuizCompletePage() {
                         style={{
                             flex: 1,
                             padding: '16px',
-                            backgroundColor: '#2D2D2D',
-                            color: '#FF8400',
+                            backgroundColor: '#E5E7EB',
+                            color: '#a5abb2ff',
                             border: 'none',
                             borderRadius: '12px',
                             fontSize: '16px',

@@ -67,8 +67,8 @@ export function QuizActions({
                     style={{
                         flex: 1,
                         padding: '16px',
-                        backgroundColor: isLastQuiz ? '#2D2D2D' : '#FF8400',
-                        color: isLastQuiz ? '#FF8400' : '#FFFFFF',
+                        backgroundColor: '#2D2D2D',
+                        color: '#FF8400',
                         border: 'none',
                         borderRadius: '12px',
                         fontSize: '16px',
