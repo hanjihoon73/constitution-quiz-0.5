@@ -205,6 +205,9 @@ export default function OnboardingPage() {
             }
 
             if (data) {
+                // 회원가입(DB Insert)이 완료된 후, DB에 데이터가 완전히 커밋될 수 있도록 약간 대기합니다
+                await new Promise(resolve => setTimeout(resolve, 500));
+
                 // 회원가입 완료에 따른 최초 로그인 기록 추가
                 await supabase.from('user_login_history').insert({
                     user_id: data.id,
