@@ -26,6 +26,7 @@ export default function ProfilePage() {
     const [isChecking, setIsChecking] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [isLoggingOut, setIsLoggingOut] = useState(false);
+    const [isFadingOut, setIsFadingOut] = useState(false);
     const [showWithdrawDialog, setShowWithdrawDialog] = useState(false);
 
     // 로그인 안 되어 있으면 로그인 페이지로
@@ -138,7 +139,11 @@ export default function ProfilePage() {
         setIsLoggingOut(true);
         try {
             await signOut();
-            window.location.replace('/login');
+            // 화면 페이드 아웃 효과
+            setIsFadingOut(true);
+            setTimeout(() => {
+                router.replace('/login');
+            }, 300);
         } catch (error) {
             console.error('로그아웃 에러:', error);
             toast.error('로그아웃에 실패했습니다.');
@@ -169,7 +174,7 @@ export default function ProfilePage() {
     return (
         <MobileFrame>
             <Header />
-            <main className="flex-1 overflow-y-auto flex flex-col">
+            <main className={`flex-1 overflow-y-auto flex flex-col transition-opacity duration-300 ${isFadingOut ? 'opacity-0' : 'opacity-100'}`}>
                 {/* 뒤로가기 */}
                 <div className="px-4 pt-4">
                     <button

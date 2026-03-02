@@ -12,6 +12,7 @@ export default function LoginPage() {
     const supabase = createClient();
 
     const [isFadingOut, setIsFadingOut] = useState(false);
+    const [isLoggingIn, setIsLoggingIn] = useState<'google' | 'kakao' | null>(null);
 
     // 사용자가 이미 로그인되어 있다면 페이드아웃 후 홈으로 이동
     useEffect(() => {
@@ -24,6 +25,7 @@ export default function LoginPage() {
     }, [user, isLoading]);
 
     const handleGoogleLogin = async () => {
+        setIsLoggingIn('google');
         await supabase.auth.signInWithOAuth({
             provider: 'google',
             options: {
@@ -33,6 +35,7 @@ export default function LoginPage() {
     };
 
     const handleKakaoLogin = async () => {
+        setIsLoggingIn('kakao');
         await supabase.auth.signInWithOAuth({
             provider: 'kakao',
             options: {
@@ -93,8 +96,9 @@ export default function LoginPage() {
                         {/* Google 로그인 */}
                         <Button
                             onClick={handleGoogleLogin}
+                            disabled={isLoggingIn !== null}
                             variant="outline"
-                            className="flex h-12 w-full items-center justify-center gap-3 rounded-xl border-border !bg-white hover:bg-accent/50 text-card-foreground font-medium shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5 cursor-pointer active:scale-[0.98]"
+                            className="flex h-12 w-full items-center justify-center gap-3 rounded-xl border-border !bg-white hover:bg-accent/50 text-card-foreground font-medium shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5 cursor-pointer active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:-translate-y-0"
                         >
                             <svg className="size-6" viewBox="0 0 24 24">
                                 <path
@@ -114,13 +118,14 @@ export default function LoginPage() {
                                     d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                                 />
                             </svg>
-                            <span>Google 로그인</span>
+                            <span>{isLoggingIn === 'google' ? '로그인 중...' : 'Google 로그인'}</span>
                         </Button>
 
                         {/* Kakao 로그인 */}
                         <Button
                             onClick={handleKakaoLogin}
-                            className="flex h-12 w-full items-center justify-center gap-3 rounded-xl border border-[#d9c307] font-medium shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5 opacity-100 hover:opacity-90 cursor-pointer active:scale-[0.98]"
+                            disabled={isLoggingIn !== null}
+                            className="flex h-12 w-full items-center justify-center gap-3 rounded-xl border border-[#d9c307] font-medium shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5 opacity-100 hover:opacity-90 cursor-pointer active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:-translate-y-0"
                             style={{ backgroundColor: '#FEE500', color: '#000000' }}
                         >
                             <svg className="size-6" viewBox="0 0 24 24">
@@ -129,7 +134,7 @@ export default function LoginPage() {
                                     d="M12 3C6.477 3 2 6.477 2 10.5c0 2.47 1.607 4.647 4.018 5.922l-.693 2.554a.5.5 0 0 0 .762.54l3.08-2.053c.91.15 1.852.23 2.833.23 5.523 0 10-3.477 10-7.693C22 6.477 17.523 3 12 3z"
                                 />
                             </svg>
-                            <span>카카오 로그인</span>
+                            <span>{isLoggingIn === 'kakao' ? '로그인 중...' : '카카오 로그인'}</span>
                         </Button>
                     </div>
 
