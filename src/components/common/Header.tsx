@@ -49,7 +49,7 @@ export function Header({ showProfile = true }: HeaderProps) {
                     <Image
                         src="/bi-constitution-quiz-horizontal-white.svg"
                         alt="모두의 헌법"
-                        width={100}
+                        width={110}
                         height={28}
                         priority
                     />
