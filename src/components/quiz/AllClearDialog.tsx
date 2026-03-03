@@ -9,6 +9,8 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/components/auth';
+import { useConfetti } from '@/hooks/useConfetti';
+import { useEffect } from 'react';
 
 interface AllClearDialogProps {
     open: boolean;
@@ -17,6 +19,15 @@ interface AllClearDialogProps {
 
 export function AllClearDialog({ open, onOpenChange }: AllClearDialogProps) {
     const { dbUser } = useAuth();
+    const { fireConfetti } = useConfetti();
+
+    useEffect(() => {
+        if (open) {
+            setTimeout(() => {
+                fireConfetti();
+            }, 300);
+        }
+    }, [open, fireConfetti]);
 
     // 닉네임 기본값 처리
     const nickname = dbUser?.nickname || '사용자';
