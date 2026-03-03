@@ -6,6 +6,7 @@ import { MobileFrame } from '@/components/common';
 import { useAuth } from '@/components/auth';
 import { getUserQuizProgress, updateQuizpackStatistics, saveQuizpackRating, unlockNextQuizpack } from '@/lib/api/quiz';
 import { Star, Clock, ArrowLeft, PartyPopper, SearchCheck } from 'lucide-react';
+import { useConfetti } from '@/hooks/useConfetti';
 
 interface QuizResult {
     totalQuizCount: number;
@@ -51,6 +52,17 @@ export default function QuizCompletePage() {
 
         loadResult();
     }, [dbUser?.id, packId]);
+
+    const { fireConfetti } = useConfetti();
+
+    // 완료 화면 로드 시 콘페티 터뜨림
+    useEffect(() => {
+        if (!isLoading && result) {
+            setTimeout(() => {
+                fireConfetti();
+            }, 300);
+        }
+    }, [isLoading, result, fireConfetti]);
 
     // 통계/평점 저장 후 이동
     const handleSaveAndNavigate = useCallback(async (destination: 'next' | 'home') => {

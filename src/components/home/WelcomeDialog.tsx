@@ -9,6 +9,8 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { useConfetti } from '@/hooks/useConfetti';
+import { useEffect } from 'react';
 
 interface WelcomeDialogProps {
     open: boolean;
@@ -16,6 +18,17 @@ interface WelcomeDialogProps {
 }
 
 export function WelcomeDialog({ open, onOpenChange }: WelcomeDialogProps) {
+    const { fireConfetti } = useConfetti();
+
+    useEffect(() => {
+        if (open) {
+            // 팝업이 뜨고 나서 약간의 딜레이 후 콘페티 터뜨림 (보다 자연스러움)
+            setTimeout(() => {
+                fireConfetti();
+            }, 300);
+        }
+    }, [open, fireConfetti]);
+
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent showCloseButton={false} className="max-w-[380px] sm:max-w-[380px] w-[calc(100%-40px)] px-6 py-10 rounded-2xl gap-6">
