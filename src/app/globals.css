@@ -249,7 +249,10 @@ body {
    ======================================== */
 
 ::-webkit-scrollbar {
-  width: 4px;
+  display: none;
+  /* 크롬, 사파리, 최신 모바일 브라우저 스크롤바 숨김 */
+  width: 0px;
+  height: 0px;
 }
 
 ::-webkit-scrollbar-track {

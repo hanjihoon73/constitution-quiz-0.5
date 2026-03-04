@@ -31,8 +31,8 @@ export function Header({ showProfile = true }: HeaderProps) {
                 await navigator.clipboard.writeText(shareData.url);
                 toast.success(
                     <div className="flex flex-col gap-1">
-                        <span className="font-semibold text-gray-900">URL이 복사되었습니다.</span>
-                        <span className="text-gray-600">친구들에게 모두의 헌법을 소개해 주세요.</span>
+                        <span className="font-semibold text-white">URL이 복사되었습니다.</span>
+                        <span className="text-gray-200">친구들에게 모두의 헌법을 소개해 주세요.</span>
                     </div>
                 );
             }
