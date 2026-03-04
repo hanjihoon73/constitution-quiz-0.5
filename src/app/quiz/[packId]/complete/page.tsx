@@ -23,7 +23,8 @@ export default function QuizCompletePage() {
     const { dbUser } = useAuth();
 
     const [result, setResult] = useState<QuizResult | null>(null);
-    const [displayRate, setDisplayRate] = useState<number>(0);
+    const [circleRate, setCircleRate] = useState<number>(0);
+    const [textRate, setTextRate] = useState<number>(0);
     const [rating, setRating] = useState<number>(0);
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
@@ -61,39 +62,65 @@ export default function QuizCompletePage() {
         if (!isLoading && result) {
             setTimeout(() => {
                 fireConfetti();
-            }, 300);
+            }, 100);
         }
     }, [isLoading, result, fireConfetti]);
 
-    // 정답률 카운트업 및 원형 차트 애니메이션
+    // 정답률 카운트업 및 원형 차트 애니메이션 분리 (순차 실행)
     useEffect(() => {
         if (!result || result.correctRate === undefined) return;
 
-        let animationFrameId: number;
-        let startTimestamp: number | null = null;
+        let circleFrameId: number;
+        let textFrameId: number;
+        let circleStart: number | null = null;
+        let textStart: number | null = null;
+
         const targetRate = result.correctRate;
-        const duration = 1500; // 1.5초 동안 서서히 증가
+        const circleDuration = 1000;
+        const textDuration = 1000;
 
-        const step = (timestamp: number) => {
-            if (!startTimestamp) startTimestamp = timestamp;
-            const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-
-            // easeOutQuart 이징 함수 (점점 느려지는 효과)
+        // 써클 드로잉 애니메이션
+        const animateCircle = (timestamp: number) => {
+            if (!circleStart) circleStart = timestamp;
+            const progress = Math.min((timestamp - circleStart) / circleDuration, 1);
             const easeOutProgress = 1 - Math.pow(1 - progress, 4);
-
-            setDisplayRate(targetRate * easeOutProgress);
+            setCircleRate(targetRate * easeOutProgress);
 
             if (progress < 1) {
-                animationFrameId = requestAnimationFrame(step);
-            } else {
-                setDisplayRate(targetRate);
+                circleFrameId = requestAnimationFrame(animateCircle);
             }
         };
 
-        animationFrameId = requestAnimationFrame(step);
+        // 텍스트 카운트업 애니메이션
+        const animateText = (timestamp: number) => {
+            if (!textStart) textStart = timestamp;
+            const progress = Math.min((timestamp - textStart) / textDuration, 1);
+            const easeOutProgress = 1 - Math.pow(1 - progress, 4);
+            setTextRate(targetRate * easeOutProgress);
+
+            if (progress < 1) {
+                textFrameId = requestAnimationFrame(animateText);
+            } else {
+                setTextRate(targetRate);
+            }
+        };
+
+        // 1. 콘페티 폭죽은 위쪽 useEffect에서 100ms 뒤에 터집니다.
+        // 2. 폭죽이 터진 후 200ms(전체 기준 300ms) 뒤에 써클 애니메이션 시작
+        const circleTimeout = setTimeout(() => {
+            circleFrameId = requestAnimationFrame(animateCircle);
+        }, 300);
+
+        // 3. 써클이 어느 정도 그려진 후 (전체 기준 600ms) 텍스트 카운트업 시작
+        const textTimeout = setTimeout(() => {
+            textFrameId = requestAnimationFrame(animateText);
+        }, 600);
 
         return () => {
-            if (animationFrameId) cancelAnimationFrame(animationFrameId);
+            clearTimeout(circleTimeout);
+            clearTimeout(textTimeout);
+            if (circleFrameId) cancelAnimationFrame(circleFrameId);
+            if (textFrameId) cancelAnimationFrame(textFrameId);
         };
     }, [result]);
 
@@ -237,7 +264,7 @@ export default function QuizCompletePage() {
                     width: '140px',
                     height: '140px',
                     borderRadius: '50%',
-                    background: `conic-gradient(#FF8400 ${displayRate * 3.6}deg, #E5E7EB 0deg)`,
+                    background: `conic-gradient(#FF8400 ${circleRate * 3.6}deg, #E5E7EB 0deg)`,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -256,7 +283,7 @@ export default function QuizCompletePage() {
                             fontWeight: 'bold',
                             color: '#FF8400',
                         }}>
-                            {Math.round(displayRate)}%
+                            {Math.round(textRate)}%
                         </span>
                     </div>
                 </div>
