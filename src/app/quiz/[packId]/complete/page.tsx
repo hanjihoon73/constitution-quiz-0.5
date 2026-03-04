@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { MobileFrame } from '@/components/common';
 import { useAuth } from '@/components/auth';
-import { getUserQuizProgress, updateQuizpackStatistics, saveQuizpackRating, unlockNextQuizpack } from '@/lib/api/quiz';
+import { getUserQuizProgress, updateQuizpackStatistics, saveQuizpackRating, unlockNextQuizpack, getUserQuizpackId, resetUserQuizpack } from '@/lib/api/quiz';
 import { Star, Clock, ArrowLeft, PartyPopper, SearchCheck } from 'lucide-react';
 import { useConfetti } from '@/hooks/useConfetti';
 
@@ -148,8 +148,13 @@ export default function QuizCompletePage() {
                 const nextPackId = await unlockNextQuizpack(dbUser.id, packId);
 
                 if (nextPackId) {
-                    // 다음 퀴즈팩이 있으면 이동
-                    router.push(`/quiz/${nextPackId}`);
+                    // 이미 완료나 진행 중인 상태가 있을 수 있으므로 DB 기록도 완전히 초기화
+                    const nextUserPackId = await getUserQuizpackId(dbUser.id, nextPackId);
+                    if (nextUserPackId) {
+                        await resetUserQuizpack(nextUserPackId);
+                    }
+                    // 다음 퀴즈팩이 있으면 이동 (기존 완료 여부 상관없이 퀴즈 다시 풀기로 강제)
+                    router.push(`/quiz/${nextPackId}?restart=true`);
                 } else {
                     // 다음 퀴즈팩이 없으면 (마지막 퀴즈팩 완료)
                     // 전면 광고나 축하 파티클 등을 보여줄 수도 있겠지만, 여기서는 홈으로 이동하며 파라미터 전달
