@@ -171,6 +171,19 @@ export async function confirmQuizpackXP(userId: number, userQuizpackId: number) 
     if (historyError) {
         console.error('[confirmQuizpackXP] XP 히스토리 기록 에러:', historyError);
     }
+
+    // 5. earned_xp에 확정 XP 복사 + pending_xp 리셋
+    const { error: quizpackUpdateError } = await supabase
+        .from('user_quizpacks')
+        .update({
+            earned_xp: pendingXP,
+            pending_xp: 0,
+        })
+        .eq('id', userQuizpackId);
+
+    if (quizpackUpdateError) {
+        console.error('[confirmQuizpackXP] earned_xp 업데이트 에러:', quizpackUpdateError);
+    }
 }
 
 /**
