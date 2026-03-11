@@ -11,6 +11,7 @@ interface QuizLayoutProps {
     onExit?: () => void;
     isViewMode?: boolean;   // 결과 보기 모드 여부
     pendingXp?: number;     // 퀴즈 진행 중 누적되는 XP
+    completedCount?: number; // 완료 횟수
     isXpDisabled?: boolean; // XP 비활성화 여부 (3회차 이후)
     isLastQuizCompleted?: boolean; // 마지막 퀴즈 정오답 확인 완료 여부
     onComplete?: () => Promise<void>; // 마지막 퀴즈 완료 시 호출될 콜백
@@ -60,7 +61,7 @@ function QuizPendingXpBadge({ xp, disabled = false }: { xp: number; disabled?: b
 /**
  * 퀴즈 화면 전체 레이아웃
  */
-export function QuizLayout({ children, navigation, onExit, isViewMode, pendingXp, isXpDisabled, isLastQuizCompleted, onComplete }: QuizLayoutProps) {
+export function QuizLayout({ children, navigation, onExit, isViewMode, pendingXp, completedCount, isXpDisabled, isLastQuizCompleted, onComplete }: QuizLayoutProps) {
     const router = useRouter();
     const [showExitDialog, setShowExitDialog] = useState(false);
     const [isScrolled, setIsScrolled] = useState(false);
@@ -153,8 +154,13 @@ export function QuizLayout({ children, navigation, onExit, isViewMode, pendingXp
                         </svg>
                     </button>
 
-                    {/* 우측 XP 표시 (viewMode가 아니고 pendingXp가 주어졌을 때) */}
-                    <div style={{ marginLeft: 'auto' }}>
+                    {/* 우측 진행 회차 및 XP 표시 */}
+                    <div className="flex items-center gap-2 ml-auto">
+                        {!isViewMode && completedCount !== undefined && (
+                            <span className="text-[12px] font-bold text-[#FF8400] bg-[#FFF3E6] px-2 py-[2px] rounded-full border border-[#FFD6A5]">
+                                {completedCount + 1}회차
+                            </span>
+                        )}
                         {!isViewMode && pendingXp !== undefined && (
                             <QuizPendingXpBadge xp={pendingXp} disabled={isXpDisabled} />
                         )}

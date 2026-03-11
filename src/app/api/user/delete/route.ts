@@ -32,13 +32,26 @@ export async function POST(request: Request) {
             { auth: { autoRefreshToken: false, persistSession: false } }
         );
 
-        // 4. users 테이블에서 사용자 관련 데이터 삭제
-        // (user_quizzes, user_quizpacks 등은 FK CASCADE로 자동 삭제되지 않을 수 있으므로 수동 삭제)
-        await supabaseAdmin.from('user_quizzes').delete().eq('user_id', userId);
-        await supabaseAdmin.from('user_quizpack_ratings').delete().eq('user_id', userId);
-        await supabaseAdmin.from('user_quizpacks').delete().eq('user_id', userId);
-        await supabaseAdmin.from('user_login_history').delete().eq('user_id', userId);
-        await supabaseAdmin.from('users').delete().eq('id', userId);
+        // 4. users 테이블에서 사용자 정보 비활성화 및 난수화 (Soft Delete)
+        // 연관 통계 데이터(user_quizzes, user_quizpacks 등)를 보존하기 위해 Hard Delete 대신 Soft Delete 적용
+        const randomStr = Math.random().toString(36).substring(2, 10);
+        const deletedNickname = `회원탈퇴_${randomStr}`;
+
+        const { error: updateError } = await supabaseAdmin
+            .from('users')
+            .update({
+                nickname: deletedNickname,
+                is_active: false
+            })
+            .eq('id', userId);
+
+        if (updateError) {
+            console.error('사용자 Soft Delete 에러:', updateError);
+            return NextResponse.json(
+                { error: '계정 비활성화 중 오류가 발생했습니다.' },
+                { status: 500 }
+            );
+        }
 
         // 5. Supabase Auth에서 사용자 삭제
         const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(authId);

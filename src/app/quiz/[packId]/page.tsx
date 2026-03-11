@@ -160,6 +160,7 @@ export default function QuizPage() {
             onExit={handleExit}
             isViewMode={isViewMode}
             pendingXp={pendingXp}
+            completedCount={completedCount}
             isXpDisabled={completedCount >= 2}
             isLastQuizCompleted={isLastQuiz && hasAnswer}
             onComplete={handleComplete}

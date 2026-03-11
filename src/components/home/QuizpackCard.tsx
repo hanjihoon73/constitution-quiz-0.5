@@ -165,8 +165,15 @@ export function QuizpackCard({ quizpack, onCompletedClick, onOpenedClick, isCurr
                     `}>
                         {quizpack.status === 'closed' && '열리지 않았어요'}
                         {quizpack.status === 'opened' && '이제 풀 수 있어요'}
-                        {quizpack.status === 'completed' && quizpack.userCorrectRate !== null && (
-                            `정답률 ${Math.round(quizpack.userCorrectRate)}%`
+                        {quizpack.status === 'completed' && quizpack.lastCorrectRate !== null && (
+                            <div className="flex items-center gap-2">
+                                <span>정답률 {Math.round(quizpack.lastCorrectRate)}%</span>
+                                {quizpack.completedCount > 0 && (
+                                    <span className="flex items-center justify-center w-[18px] h-[18px] rounded-full border border-[#FF8400] bg-[#2D2D2D] text-[#FF8400] text-[10px] font-bold">
+                                        {quizpack.completedCount}
+                                    </span>
+                                )}
+                            </div>
                         )}
                     </span>
 

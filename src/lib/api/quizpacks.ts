@@ -11,6 +11,8 @@ export interface QuizpackWithStatus {
     status: QuizpackStatus;
     userCorrectRate: number | null;
     averageRating: number | null;
+    lastCorrectRate: number | null;
+    completedCount: number;
     currentQuizOrder: number | null;
     totalQuizCount: number;
     solvedQuizCount: number | null;
@@ -115,6 +117,8 @@ export async function getQuizpacksWithStatus(userId: number): Promise<QuizpackWi
             quizCount: quizpack.quiz_count_all || 0,
             status,
             userCorrectRate: userQuizpack?.correct_rate || null,
+            lastCorrectRate: userQuizpack?.last_correct_rate || null,
+            completedCount: userQuizpack?.completed_count || 0,
             averageRating: stats?.average_rating || null,
             currentQuizOrder: userQuizpack?.current_quiz_order || null,
             totalQuizCount: userQuizpack?.total_quiz_count || quizpack.quiz_count_all || 0,

@@ -163,6 +163,7 @@ export async function saveQuizProgress(
             updateData.completed_at = new Date().toISOString();
             updateData.session_number = (existing.session_number || 0) + 1;
             updateData.completed_count = ((existing as { completed_count?: number }).completed_count || 0) + 1;
+            updateData.last_correct_rate = correctRate;
         }
 
         if (data.totalTimeSeconds) {
