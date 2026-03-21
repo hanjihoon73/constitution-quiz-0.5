@@ -53,7 +53,25 @@ function RankItem({ item, animationDelay }: RankItemProps) {
     useEffect(() => {
         if (isMe && itemRef.current) {
             const timer = setTimeout(() => {
-                itemRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                const element = itemRef.current;
+                const container = element?.closest('main');
+
+                if (element && container) {
+                    const containerRect = container.getBoundingClientRect();
+                    const elementRect = element.getBoundingClientRect();
+
+                    // 컨테이너 내부에서의 상대적인 Y 스크롤 위치
+                    const relativeY = elementRect.top - containerRect.top + container.scrollTop;
+
+                    // 상단 고정 영역(약 350px) + 살짝 띄워주는 여백(80px)
+                    const headerHeight = 350;
+                    const margin = 110;
+                    const targetTop = relativeY - headerHeight - margin;
+
+                    container.scrollTo({ top: targetTop, behavior: 'smooth' });
+                } else {
+                    element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
             }, 300);
             return () => clearTimeout(timer);
         }
@@ -206,73 +224,105 @@ export default function LeaguePage() {
         return result.sort((a, b) => a.rank - b.rank);
     })();
 
+    const top3Items = displayItems.filter(item => item.rank <= 3);
+    const otherItems = displayItems.filter(item => item.rank > 3);
+
     return (
         <MobileFrame>
             <Header />
-            <main className="flex-1 overflow-y-auto flex flex-col animate-in fade-in duration-400">
-                {/* 상단 컨트롤 */}
-                <div className="px-4 pt-4 flex justify-between items-center">
-                    <button
-                        onClick={() => router.back()}
-                        className="flex items-center justify-center w-10 h-10 rounded-full text-gray-500 transition-transform duration-200 hover:-translate-y-0.5 active:scale-95 hover:text-gray-700 cursor-pointer"
-                    >
-                        <ArrowLeft size={24} />
-                    </button>
-                    <button
-                        onClick={() => loadRankings(true)}
-                        disabled={isRefreshing}
-                        className="flex items-center justify-center w-10 h-10 rounded-full text-gray-500 transition-transform duration-200 hover:-translate-y-0.5 active:scale-95 hover:text-gray-700 cursor-pointer disabled:opacity-50"
-                        aria-label="랭킹 새로고침"
-                    >
-                        <RefreshCw
-                            size={20}
-                            className={isRefreshing ? 'animate-spin' : ''}
-                        />
-                    </button>
-                </div>
-
-                {/* 헤더 타이틀 영역 */}
-                <div className="px-4 pt-2 pb-4 animate-in fade-in slide-in-from-bottom-4 duration-400 fill-mode-both">
-                    <div className="flex items-center gap-3 mb-1">
-                        <div
-                            className="w-10 h-10 rounded-full flex items-center justify-center"
-                            style={{ backgroundColor: '#2D2D2D' }}
+            <main className="flex-1 overflow-y-auto flex flex-col animate-in fade-in duration-400 relative">
+                <div className="sticky top-0 z-10 bg-background pb-3 shadow-sm shadow-background/50">
+                    {/* 상단 컨트롤 */}
+                    <div className="px-4 pt-4 flex justify-between items-center bg-background">
+                        <button
+                            onClick={() => router.back()}
+                            className="flex items-center justify-center w-10 h-10 rounded-full text-gray-500 transition-transform duration-200 hover:-translate-y-0.5 active:scale-95 hover:text-gray-700 cursor-pointer"
                         >
-                            <Trophy className="w-5 h-5" style={{ color: '#FF8400' }} strokeWidth={2} />
-                        </div>
-                        <div>
-                            <h1 className="text-[18px] font-bold text-gray-900">주간 리그 랭킹</h1>
-                            <p className="text-[11px] text-gray-400">{weekLabel}</p>
+                            <ArrowLeft size={24} />
+                        </button>
+                        <button
+                            onClick={() => loadRankings(true)}
+                            disabled={isRefreshing}
+                            className="flex items-center justify-center w-10 h-10 rounded-full text-gray-500 transition-transform duration-200 hover:-translate-y-0.5 active:scale-95 hover:text-gray-700 cursor-pointer disabled:opacity-50"
+                            aria-label="랭킹 새로고침"
+                        >
+                            <RefreshCw
+                                size={20}
+                                className={isRefreshing ? 'animate-spin' : ''}
+                            />
+                        </button>
+                    </div>
+
+                    {/* 헤더 타이틀 영역 */}
+                    <div className="px-4 pt-2 pb-4 animate-in fade-in slide-in-from-bottom-4 duration-400 fill-mode-both bg-background">
+                        <div className="flex items-center gap-3 mb-1">
+                            <div
+                                className="w-10 h-10 rounded-full flex items-center justify-center"
+                                style={{ backgroundColor: '#2D2D2D' }}
+                            >
+                                <Trophy className="w-5 h-5" style={{ color: '#FF8400' }} strokeWidth={2} />
+                            </div>
+                            <div>
+                                <h1 className="text-[18px] font-bold text-gray-900">주간 리그 랭킹</h1>
+                                <p className="text-[11px] text-gray-400">{weekLabel}</p>
+                            </div>
                         </div>
                     </div>
+
+                    {/* 1, 2, 3위 랭킹 목록 */}
+                    <div className="px-4 flex flex-col gap-2">
+                        {isLoading ? (
+                            <div className="flex flex-col gap-2">
+                                {[...Array(3)].map((_, i) => (
+                                    <div
+                                        key={`top-${i}`}
+                                        className="h-16 rounded-xl bg-gray-100 animate-pulse"
+                                        style={{ animationDelay: `${i * 60}ms` }}
+                                    />
+                                ))}
+                            </div>
+                        ) : displayItems.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center py-10 gap-3">
+                                <Trophy className="w-12 h-12 text-gray-200" strokeWidth={1.5} />
+                                <p className="text-[14px] text-gray-400 text-center">
+                                    아직 이번 주 리그 참여자가 없습니다.<br />
+                                    가장 먼저 퀴즈팩을 완료하고 1위에 등극하세요!
+                                </p>
+                            </div>
+                        ) : (
+                            top3Items.map((item, idx) => (
+                                <RankItem
+                                    key={item.userId}
+                                    item={item}
+                                    animationDelay={idx * 50}
+                                />
+                            ))
+                        )}
+                    </div>
+                    {/* 하단 구분선 추가 */}
+                    {!isLoading && displayItems.length > 0 && top3Items.length > 0 && (
+                        <div className="absolute bottom-0 left-0 right-0 h-px bg-gray-100" />
+                    )}
                 </div>
 
-                {/* 랭킹 목록 */}
-                <div className="px-4 pb-12 flex flex-col gap-2">
+                {/* 4위 이하 랭킹 목록 */}
+                <div className="px-4 pb-12 pt-2 flex flex-col gap-2 relative z-0">
                     {isLoading ? (
                         <div className="flex flex-col gap-2">
-                            {[...Array(6)].map((_, i) => (
+                            {[...Array(3)].map((_, i) => (
                                 <div
-                                    key={i}
+                                    key={`other-${i}`}
                                     className="h-16 rounded-xl bg-gray-100 animate-pulse"
-                                    style={{ animationDelay: `${i * 60}ms` }}
+                                    style={{ animationDelay: `${(i + 3) * 60}ms` }}
                                 />
                             ))}
                         </div>
-                    ) : displayItems.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-20 gap-3">
-                            <Trophy className="w-12 h-12 text-gray-200" strokeWidth={1.5} />
-                            <p className="text-[14px] text-gray-400 text-center">
-                                아직 이번 주 리그 참여자가 없습니다.<br />
-                                가장 먼저 퀴즈팩을 완료하고 1위에 등극하세요!
-                            </p>
-                        </div>
                     ) : (
-                        displayItems.map((item, idx) => (
+                        otherItems.map((item, idx) => (
                             <RankItem
                                 key={item.userId}
                                 item={item}
-                                animationDelay={idx * 50}
+                                animationDelay={(top3Items.length + idx) * 50}
                             />
                         ))
                     )}
