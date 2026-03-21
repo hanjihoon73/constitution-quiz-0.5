@@ -12,17 +12,29 @@ export function LeagueFloatingButton() {
     const router = useRouter();
 
     return (
-        <button
-            onClick={() => router.push('/league')}
-            className="absolute bottom-6 right-6 z-50 w-14 h-14 rounded-full flex items-center justify-center shadow-lg transition-all duration-200 hover:-translate-y-1 hover:shadow-xl active:scale-95 cursor-pointer"
-            style={{
-                backgroundColor: '#2D2D2D',
-                border: '2.5px solid #FF8400',
-            }}
-            aria-label="주간 리그 랭킹 보기"
-        >
-            <Trophy className="w-6 h-6" style={{ color: '#FF8400' }} strokeWidth={2} />
-        </button>
+        <>
+            <style>{`
+                @keyframes float-gentle {
+                    0%, 100% { transform: translateY(0); }
+                    50% { transform: translateY(-10px); }
+                }
+                .animate-float-gentle {
+                    animation: float-gentle 3s ease-in-out infinite;
+                }
+            `}</style>
+            <button
+                onClick={() => router.push('/league')}
+                className="animate-float-gentle absolute bottom-12 right-8 z-50 w-16 h-16 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer"
+                style={{
+                    backgroundColor: '#2D2D2D',
+                    border: '5px solid #FF8400',
+                    boxShadow: '0px 4px 10px #8a8a8aff',
+                }}
+                aria-label="주간 리그 랭킹 보기"
+            >
+                <Trophy className="w-9 h-9" style={{ color: '#FF8400' }} strokeWidth={1.5} />
+            </button>
+        </>
     );
 }
 

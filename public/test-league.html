@@ -164,18 +164,8 @@
     <div id="toast" class="toast"></div>
 
     <script>
-        // Supabase 클라이언트 초기화 (인증 세션 없이 anon key만 사용)
         const SUPABASE_URL = 'https://oawyhlmquuutqfuewaoc.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9hd3lobG1xdXV1dHFmdWV3YW9jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg2MjY3ODMsImV4cCI6MjA4NDIwMjc4M30.8Fs11w-_AF50-JqMqC6N9fLMpiRL49N9JxWzTVC6hc4';
-
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-            auth: {
-                // 인증 세션을 아예 사용하지 않음 → 서비스 탭과 토큰 충돌 원천 차단
-                persistSession: false,
-                autoRefreshToken: false,
-                detectSessionInUrl: false,
-            }
-        });
 
         let isLoading = false;
 
@@ -195,11 +185,25 @@
             if (isLoading) return;
             setLoading(true);
             try {
-                const { error } = await supabase.rpc(funcName);
-                if (error) throw error;
+                // Supabase 라이브러리 없이 순수 브라우저 fetch로 바로 통신 (가장 빠르고 확실함)
+                const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${funcName}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                    }
+                });
+
+                if (!res.ok) {
+                    const errorData = await res.json().catch(() => ({}));
+                    throw new Error(errorData.message || res.statusText || '알 수 없는 오류');
+                }
+
                 showToast(successMsg, 'success');
             } catch (err) {
-                showToast(`실패: ${err.message || JSON.stringify(err)}`, 'error');
+                showToast(`실패: ${err.message}`, 'error');
+                console.error('RPC Error:', err);
             } finally {
                 setLoading(false);
             }
