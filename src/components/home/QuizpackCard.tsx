@@ -50,13 +50,13 @@ export function QuizpackCard({ quizpack, onCompletedClick, onOpenedClick, isCurr
         const base = "relative rounded-[16px] p-5 mb-3 transition-all duration-200 active:scale-[0.98]";
         switch (quizpack.status) {
             case 'closed':
-                return `${base} bg-gray-100 border border-gray-300 cursor-default`;
+                return `${base} bg-gray-100 border border-gray-200 cursor-default`;
             case 'opened':
-                return `${base} bg-white border border-gray-400 cursor-pointer hover:shadow-lg hover:-translate-y-1`;
+                return `${base} bg-white border border-gray-300 cursor-pointer hover:shadow-lg hover:-translate-y-1`;
             case 'in_progress':
                 return `${base} border border-[#FF8400] cursor-pointer hover:shadow-lg hover:-translate-y-1`;
             case 'completed':
-                return `${base} bg-gray-100 border border-gray-400 cursor-pointer hover:shadow-lg hover:-translate-y-1`;
+                return `${base} bg-gray-100 border border-gray-300 cursor-pointer hover:shadow-lg hover:-translate-y-1`;
             default:
                 return `${base} bg-white border border-gray-200`;
         }

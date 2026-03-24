@@ -23,7 +23,7 @@ export function Header({ showProfile = true }: HeaderProps) {
         const shareData = {
             title: '모두의 헌법',
             text: '하루 5분, 대한민국 헌법 마스터하기',
-            url: 'https://constitution-quiz-0-5.vercel.app/',
+            url: 'https://constitution-quiz.vercel.app/',
         };
 
         try {

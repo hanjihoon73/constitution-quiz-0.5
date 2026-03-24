@@ -21,6 +21,7 @@ const customFont = localFont({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://constitution-quiz.vercel.app"),
   title: "모두의 헌법 - 퀴즈로 즐기는 헌법 상식",
   description: "퀴즈를 풀면서 대한민국 헌법을 쉽고 재미있게 배워보세요.",
   keywords: ["헌법", "퀴즈", "교육", "대한민국", "법률"],
