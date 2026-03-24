@@ -52,11 +52,11 @@ export function QuizpackCard({ quizpack, onCompletedClick, onOpenedClick, isCurr
             case 'closed':
                 return `${base} bg-gray-100 border border-gray-300 cursor-default`;
             case 'opened':
-                return `${base} bg-white border border-gray-300 cursor-pointer hover:shadow-lg hover:-translate-y-1`;
+                return `${base} bg-white border border-gray-400 cursor-pointer hover:shadow-lg hover:-translate-y-1`;
             case 'in_progress':
-                return `${base} bg-white border border-[#FF8400] cursor-pointer hover:shadow-lg hover:-translate-y-1`;
+                return `${base} border border-[#FF8400] cursor-pointer hover:shadow-lg hover:-translate-y-1`;
             case 'completed':
-                return `${base} bg-gray-100 border border-gray-300 cursor-pointer hover:shadow-lg hover:-translate-y-1`;
+                return `${base} bg-gray-200 border border-gray-400 cursor-pointer hover:shadow-lg hover:-translate-y-1`;
             default:
                 return `${base} bg-white border border-gray-200`;
         }
@@ -79,7 +79,13 @@ export function QuizpackCard({ quizpack, onCompletedClick, onOpenedClick, isCurr
     };
 
     return (
-        <div onClick={handleClick} className={getContainerClasses()}>
+        <div
+            onClick={handleClick}
+            className={getContainerClasses()}
+            style={{
+                backgroundColor: quizpack.status === 'in_progress' ? '#FFF8F1' : undefined
+            }}
+        >
             {/* 상단: 순서 번호 + 상태 아이콘 */}
             <div className="flex justify-between items-start mb-3">
                 <span className={`text-[30px] font-bold leading-none ${quizpack.status === 'closed' ? 'text-gray-400' :
@@ -133,6 +139,11 @@ export function QuizpackCard({ quizpack, onCompletedClick, onOpenedClick, isCurr
                         <div className="flex items-center gap-2">
                             <span className="text-[#FF8400] text-[13px] font-medium">풀고 있는 중이에요</span>
                             <span className="text-[13px] text-gray-500 font-medium">{progressPercent}%</span>
+                            {quizpack.completedCount > 0 && (
+                                <span className="flex items-center justify-center min-w-[16px] h-[18px] px-2.5 rounded-full bg-[#FF8400] text-[#FFFFFF] text-[10px] font-bold">
+                                    {quizpack.completedCount}
+                                </span>
+                            )}
                         </div>
                         {quizpack.pendingXp !== null && quizpack.pendingXp !== undefined && (
                             <div className="absolute right-5 bottom-4 flex items-baseline gap-1">

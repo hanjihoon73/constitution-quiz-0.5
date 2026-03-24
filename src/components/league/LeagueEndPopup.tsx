@@ -29,12 +29,12 @@ function formatLeagueDate(dateStr: string): string {
 /** 순위별 안내 문구 반환 */
 function getRankMessage(rank: number, nickname: string): string {
     switch (rank) {
-        case 1: return `역사적인 순간! #${nickname}님. 주간 리그 랭킹 1위에 등극했습니다.`;
-        case 2: return `가문의 영광! #${nickname}님. 주간 리그 랭킹 2위에 등극했습니다.`;
-        case 3: return `대단합니다! #${nickname}님. 주간 리그 랭킹 3위에 등극했습니다.`;
-        case 4: return `엄청나네요! #${nickname}님. 주간 리그 랭킹 4위를 달성했습니다.`;
-        case 5: return `놀라워요! #${nickname}님. 주간 리그 랭킹 5위를 달성했습니다.`;
-        default: return `수고하셨습니다! #${nickname}님. 주간 리그 랭킹 ${rank}위를 달성했습니다.`;
+        case 1: return `${nickname}님, 역사적인 순간입니다!\n지난 주 리그에서 1위에 등극했어요.`;
+        case 2: return `${nickname}님, 가문의 영광입니다!\n지난 주 리그에서 2위에 등극했어요.`;
+        case 3: return `${nickname}님, 대단합니다!\n지난 주 리그에서 3위에 등극했어요.`;
+        case 4: return `${nickname}님, 엄청나네요!\n지난 주 리그에서 4위를 달성했습니다.`;
+        case 5: return `${nickname}님, 놀라워요!\n지난 주 리그에서 5위를 달성했습니다.`;
+        default: return `${nickname}님, 수고하셨어요!\n지난 주 리그에서 ${rank}위를 달성했습니다.`;
     }
 }
 
@@ -77,21 +77,21 @@ export function LeagueEndPopup({ open, onClose, rank, nickname, weekStartDate, w
                 </button>
 
                 <DialogHeader className="pt-2">
-                    <DialogTitle className="sr-only">지난 주 리그가 종료됐습니다!</DialogTitle>
+                    <DialogTitle className="sr-only">지난 주 리그가 종료됐어요!</DialogTitle>
 
                     {/* 트로피 아이콘 */}
-                    <div className="flex justify-center mb-4">
+                    <div className="flex justify-center mt-6 mb-6">
                         <div
-                            className="w-16 h-16 rounded-full flex items-center justify-center"
+                            className="w-20 h-20 rounded-full flex items-center justify-center"
                             style={{ backgroundColor: '#2D2D2D' }}
                         >
-                            <Trophy className="w-8 h-8" style={{ color: isTop3 ? '#FF8400' : '#aaaaaa' }} strokeWidth={2} />
+                            <Trophy className="w-14 h-14" style={{ color: isTop3 ? '#FF8400' : '#aaaaaa' }} strokeWidth={1.5} />
                         </div>
                     </div>
 
                     {/* 타이틀 */}
-                    <p className="text-center text-[17px] font-bold text-gray-900 mb-2">
-                        지난 주 리그가 종료됐습니다!
+                    <p className="text-center text-[20px] font-bold text-gray-900 mb-2">
+                        지난 주 리그가 종료됐어요!
                     </p>
 
                     {/* 기간 */}
@@ -100,17 +100,14 @@ export function LeagueEndPopup({ open, onClose, rank, nickname, weekStartDate, w
                     </p>
 
                     {/* 순위 */}
-                    <div
-                        className="flex items-center justify-center rounded-xl py-3 mb-4"
-                        style={{ backgroundColor: '#f9f9f9', border: '1px solid #ebebeb' }}
-                    >
+                    <div className="flex items-center justify-center mb-4">
                         <span className="text-4xl font-black" style={{ color: isTop3 ? '#FF8400' : '#2D2D2D' }}>
                             {rank}위
                         </span>
                     </div>
 
                     {/* 안내 문구 */}
-                    <p className="text-center text-[14px] text-gray-600 leading-relaxed mb-6">
+                    <p className="text-center text-[14px] text-gray-600 leading-relaxed mb-6 whitespace-pre-line">
                         {getRankMessage(rank, nickname)}
                     </p>
                 </DialogHeader>
@@ -120,7 +117,7 @@ export function LeagueEndPopup({ open, onClose, rank, nickname, weekStartDate, w
                     onClick={handleRankingClick}
                     className="w-full h-12 rounded-xl font-semibold text-[#FF8400] bg-[#2D2D2D] hover:bg-[#3d3d3d] border-none shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-pointer"
                 >
-                    주간 랭킹 확인
+                    이번 주 랭킹 보기
                 </Button>
             </DialogContent>
         </Dialog>

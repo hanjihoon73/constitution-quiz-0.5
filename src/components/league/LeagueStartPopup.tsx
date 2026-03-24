@@ -59,21 +59,21 @@ export function LeagueStartPopup({ open, onClose, weekStartDate, weekEndDate }: 
                 </button>
 
                 <DialogHeader className="pt-2">
-                    <DialogTitle className="sr-only">새로운 주간 리그가 시작됐습니다!</DialogTitle>
+                    <DialogTitle className="sr-only">새로운 주간 리그가 시작됐어요!</DialogTitle>
 
                     {/* 트로피 아이콘 */}
-                    <div className="flex justify-center mb-4">
+                    <div className="flex justify-center mt-6 mb-6">
                         <div
-                            className="w-16 h-16 rounded-full flex items-center justify-center"
+                            className="w-20 h-20 rounded-full flex items-center justify-center"
                             style={{ backgroundColor: '#2D2D2D' }}
                         >
-                            <Trophy className="w-8 h-8" style={{ color: '#FF8400' }} strokeWidth={2} />
+                            <Trophy className="w-14 h-14" style={{ color: '#FF8400' }} strokeWidth={1.5} />
                         </div>
                     </div>
 
                     {/* 타이틀 */}
-                    <p className="text-center text-[17px] font-bold text-gray-900 mb-2">
-                        새로운 주간 리그가 시작됐습니다!
+                    <p className="text-center text-[20px] font-bold text-gray-900 mb-2">
+                        새로운 주간 리그가 시작됐어요!
                     </p>
 
                     {/* 기간 */}
@@ -83,7 +83,7 @@ export function LeagueStartPopup({ open, onClose, weekStartDate, weekEndDate }: 
 
                     {/* 안내 문구 */}
                     <p className="text-center text-[14px] text-gray-600 leading-relaxed mb-6">
-                        퀴즈팩을 완료하고 XP를 획득해<br />상위 랭킹에 등극하세요.
+                        퀴즈팩을 완료하고 XP를 획득해<br />상위 랭커로 등극하세요.
                     </p>
                 </DialogHeader>
 
@@ -91,7 +91,7 @@ export function LeagueStartPopup({ open, onClose, weekStartDate, weekEndDate }: 
                     onClick={handleRankingClick}
                     className="w-full h-12 rounded-xl font-semibold text-[#FF8400] bg-[#2D2D2D] hover:bg-[#3d3d3d] border-none shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-pointer"
                 >
-                    주간 랭킹 확인
+                    이번 주 랭킹 보기
                 </Button>
             </DialogContent>
         </Dialog>

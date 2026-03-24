@@ -286,7 +286,7 @@ export default function LeaguePage() {
                                     className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
                                     style={{ backgroundColor: '#2D2D2D' }}
                                 >
-                                    <Trophy className="w-7 h-7" style={{ color: '#FF8400' }} strokeWidth={1.5} />
+                                    <Trophy className="w-8 h-8" style={{ color: '#FF8400' }} strokeWidth={1.5} />
                                 </div>
                                 <div className="flex flex-col">
                                     <h1 className="text-[19px] font-bold text-gray-900 leading-tight">주간 리그 랭킹</h1>
@@ -297,9 +297,9 @@ export default function LeaguePage() {
                             {/* 리그 기간 표시 (캡슐 스타일) */}
                             <div
                                 className="flex items-center justify-center px-4 py-1 rounded-full mb-2"
-                                style={{ backgroundColor: '#2D2D2D' }}
+                                style={{ backgroundColor: '#e9e9e9ff' }}
                             >
-                                <span className="text-[12px] font-regular leading-4" style={{ color: '#FF8400' }}>
+                                <span className="text-[12px] font-regular leading-4" style={{ color: '#2D2D2D' }}>
                                     {weekLabel}
                                 </span>
                             </div>
@@ -319,10 +319,10 @@ export default function LeaguePage() {
                                 ))}
                             </div>
                         ) : displayItems.length === 0 ? (
-                            <div className="flex flex-col items-center justify-center py-10 gap-3">
-                                <Trophy className="w-12 h-12 text-gray-200" strokeWidth={1.5} />
+                            <div className="flex flex-col items-center justify-center py-40 gap-3">
+                                <Trophy className="w-20 h-20 text-gray-200" strokeWidth={1} />
                                 <p className="text-[14px] text-gray-400 text-center">
-                                    아직 이번 주 리그 참여자가 없습니다.<br />
+                                    이번 주 리그 참가자가 아직 없어요.<br />
                                     가장 먼저 퀴즈팩을 완료하고 1위에 등극하세요!
                                 </p>
                             </div>
