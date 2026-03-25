@@ -21,7 +21,7 @@ export default function LeagueTestPage() {
         setIsLoading(true);
         try {
             await createDummyLeagueUsers();
-            toast.success('더미 유저 20명을 성공적으로 생성했습니다.');
+            toast.success('더미 유저 100명을 성공적으로 생성했습니다.');
         } catch (error: any) {
             toast.error(error.message || '더미 유저 생성 실패');
         } finally {
@@ -117,7 +117,7 @@ export default function LeagueTestPage() {
                             <h2 className="font-semibold text-gray-900">1. 테스트 유저 목록 제어</h2>
                         </div>
                         <p className="text-xs text-gray-500 mb-4 ml-11">
-                            is_test=true 인 더미 데이터 20건을 users 테이블에 즉시 생성합니다.
+                            is_test=true 인 더미 데이터 100건을 users 테이블에 즉시 생성합니다.
                         </p>
                         <div className="flex flex-col gap-2 ml-11">
                             <Button
@@ -125,7 +125,7 @@ export default function LeagueTestPage() {
                                 disabled={isLoading}
                                 className="w-full bg-blue-500 hover:bg-blue-600 font-semibold"
                             >
-                                더미 유저 20명 생성
+                                더미 유저 100명 생성
                             </Button>
                             <Button
                                 onClick={handleDeleteDummies}
