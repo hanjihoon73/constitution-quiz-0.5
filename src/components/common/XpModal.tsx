@@ -74,7 +74,7 @@ export function XpModal({ totalXp, delay = 0, isReady = true }: XpModalProps) {
             backgroundColor: '#FF8400',
             borderRadius: '9999px',
             // 패딩: 상단 여백 설정(위로 밀어 아래로 내리기), 좌우 여백, 하단 여백 설정
-            paddingTop: '4px',
+            paddingTop: '5px',
             paddingBottom: '2px',
             paddingLeft: '12px',
             paddingRight: '12px',
@@ -89,7 +89,7 @@ export function XpModal({ totalXp, delay = 0, isReady = true }: XpModalProps) {
             }}>
                 XP
             </span>
-            <span className="text-[16px] text-white font-[600] tracking-tight">
+            <span className="text-[15px] text-white font-[600] tracking-tight">
                 {numberPart}
                 {unitPart && <span className="ml-[2px]">{unitPart}</span>}
             </span>

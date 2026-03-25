@@ -110,7 +110,7 @@ export function QuizpackCard({ quizpack, onCompletedClick, onOpenedClick, isCurr
                             : 'bg-[#2D2D2D] text-[#FF8400]';
 
                     return (
-                        <span key={i} className={`px-2 py-[2px] rounded-md text-[13px] font-medium ${tagTheme}`}>
+                        <span key={i} className={`px-1.5 py-[4px] rounded-md text-[12px] font-regular ${tagTheme}`}>
                             #{k.trim()}
                         </span>
                     );

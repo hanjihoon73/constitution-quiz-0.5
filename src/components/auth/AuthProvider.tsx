@@ -65,8 +65,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             }
             setIsDbUserLoaded(true);
         } catch {
-            // fetch 자체가 AbortError 등으로 실패한 경우 → 조용히 무시
-            // 기존 dbUser가 있으면 유지됨 (null로 덮어쓰지 않음)
+            // fetch 실패 시에도 isDbUserLoaded는 true로 설정
+            // → 무한 로딩 방지 (기존 dbUser 데이터는 유지)
+            setIsDbUserLoaded(true);
         }
     };
 
@@ -112,8 +113,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 isInitialized.current = true;
                 setIsLoading(false);
             } catch {
-                // React StrictMode 더블 마운트 또는 페이지 전환 시 발생하는
-                // AbortError → 개발 환경 전용 현상이므로 조용히 무시
+                // getSession 실패(세션 타임아웃, AbortError 등) 시에도
+                // isLoading을 해제하여 무한 로딩 방지
+                isInitialized.current = true;
+                setIsLoading(false);
+                setIsDbUserLoaded(true);
             }
         };
 
@@ -130,12 +134,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 setSession(session);
                 setUser(session?.user ?? null);
 
-                if (session?.user) {
-                    await fetchDbUser(session.user);
-                } else {
+                if (event === 'SIGNED_OUT') {
+                    // 명시적 로그아웃 시에만 상태 완전 초기화
                     setDbUser(null);
                     setIsDbUserLoaded(false);
+                } else if (session?.user) {
+                    // TOKEN_REFRESHED, SIGNED_IN 등: DB 사용자 정보 갱신
+                    await fetchDbUser(session.user);
                 }
+                // 그 외 (세션이 일시적으로 null인 경우): 기존 dbUser 유지 → 무한 로딩 방지
             }
         );
 
