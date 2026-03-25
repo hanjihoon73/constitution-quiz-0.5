@@ -75,7 +75,7 @@ function RankItem({ item, animationDelay, isOpen, onToggle }: RankItemProps) {
         if (item.rank <= 3) {
             const medalSrc = item.rank === 1 ? '/medal_gold.svg' : item.rank === 2 ? '/medal_silver.svg' : '/medal_bronze.svg';
             return (
-                <div className="relative w-10 h-10 flex items-center justify-center flex-shrink-0">
+                <div className="relative w-9 h-9 flex items-center justify-center flex-shrink-0">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={medalSrc} alt={`rank ${item.rank}`} className="w-full h-full object-contain" />
                     <span className="absolute inset-0 flex items-center justify-center text-[14px] font-bold text-white pb-2">
@@ -86,7 +86,7 @@ function RankItem({ item, animationDelay, isOpen, onToggle }: RankItemProps) {
         }
         return (
             <div className="w-12 text-center flex-shrink-0">
-                <span className="text-[20px] font-bold text-gray-900">
+                <span className={`text-[19px] font-bold ${isMe ? 'text-gray-700' : 'text-gray-400'}`}>
                     {item.rank}
                 </span>
             </div>
@@ -147,7 +147,7 @@ function RankItem({ item, animationDelay, isOpen, onToggle }: RankItemProps) {
 
                 {/* 사용자 정보 (닉네임 + 타이틀) */}
                 <div className="flex-1 min-w-0 flex items-center gap-4">
-                    <span className="text-[16px] font-regular text-gray-900 truncate">
+                    <span className={`text-[16px] ${isMe ? 'font-bold' : 'font-regular'} text-gray-900 truncate`}>
                         {item.nickname}
                     </span>
 
@@ -279,7 +279,7 @@ export default function LeaguePage() {
                     </div>
 
                     {/* 헤더 타이틀 영역 */}
-                    <div className="px-4 pt-2 pb-5 animate-in fade-in slide-in-from-bottom-4 duration-400 fill-mode-both bg-background">
+                    <div className="px-6 pt-2 pb-5 animate-in fade-in slide-in-from-bottom-4 duration-400 fill-mode-both bg-background">
                         <div className="flex items-end justify-between gap-3">
                             <div className="flex items-center gap-3">
                                 <div
