@@ -70,7 +70,14 @@ export default function LoginPage() {
             <div className="flex flex-1 flex-col relative min-h-full">
                 {/* 우상단 버전 표시 */}
                 <div className="absolute top-4 right-6 z-10">
-                    <span className="text-sm text-gray-400">v 1.0</span>
+                    <a
+                        href="https://maperson.notion.site/Release-Note-32ee387af28e80689772c85365c5f5aa?source=copy_link"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-gray-400 transition-all duration-200 hover:-translate-y-0.5 active:scale-95 hover:text-gray-600 inline-block cursor-pointer"
+                    >
+                        v 1.0
+                    </a>
                 </div>
 
                 {/* 메인 컨텐츠 영역 (중앙 정렬) */}

@@ -199,7 +199,14 @@ export default function ProfilePage() {
                     >
                         <ArrowLeft size={24} />
                     </button>
-                    <span className="text-sm text-gray-400">v 1.0</span>
+                    <a
+                        href="https://maperson.notion.site/Release-Note-32ee387af28e80689772c85365c5f5aa?source=copy_link"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-gray-400 transition-all duration-200 hover:-translate-y-0.5 active:scale-95 hover:text-gray-600 inline-block cursor-pointer"
+                    >
+                        v 1.0
+                    </a>
                 </div>
 
                 {/* 프로필 카드 */}

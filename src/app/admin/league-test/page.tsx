@@ -54,7 +54,7 @@ export default function LeagueTestPage() {
         <div className="flex-1 overflow-y-auto pr-4 pb-8 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div>
                 <h2 className="text-3xl font-bold text-white tracking-tight">리그 테스트</h2>
-                <p className="text-slate-400 mt-1">주간 리그 테스트 전용 페이지</p>
+                <p className="text-slate-400 mt-3">주간 리그 테스트 전용 페이지입니다.</p>
                 <div className="flex items-center gap-2 text-slate-400 text-sm bg-slate-900/50 px-4 py-2 rounded-xl border border-slate-800 mt-6 w-fit">
                     <AlertCircle className="w-4 h-4 text-indigo-400 shrink-0" />
                     <span>

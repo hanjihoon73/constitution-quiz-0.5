@@ -12,15 +12,15 @@ export default async function AdminActivitiesPage() {
                 <h2 className="text-3xl font-bold text-white tracking-tight">
                     활동 관리
                 </h2>
-                <p className="text-slate-400 mt-1">
-                    전체 사용자의 퀴즈 풀이 결과와 XP 획득 등 서비스 활동 통계를 조회합니다.
+                <p className="text-slate-400 mt-3">
+                    사용자의 서비스 이용과 활동 현황을 조회합니다.
                 </p>
             </div>
 
             {/* Client Dashboard Component */}
-            <ActivitiesClient 
-                initialActivities={activities} 
-                total={activities.length} 
+            <ActivitiesClient
+                initialActivities={activities}
+                total={activities.length}
             />
         </div>
     );

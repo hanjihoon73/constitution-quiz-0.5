@@ -1,7 +1,7 @@
-import { 
-    Users, 
-    BookOpen, 
-    TrendingUp, 
+import {
+    Users,
+    BookOpen,
+    TrendingUp,
     MousePointerClick,
     ArrowUpRight,
     ArrowDownRight
@@ -15,7 +15,7 @@ export default async function AdminDashboardPage() {
         <div className="space-y-8 animate-in fade-in duration-500">
             <div>
                 <h2 className="text-3xl font-bold text-white tracking-tight">대시보드</h2>
-                <p className="text-slate-400 mt-1">실시간 서비스 현황 및 주요 지표를 확인합니다.</p>
+                <p className="text-slate-400 mt-3">실시간 서비스 현황 및 주요 지표를 조회합니다.</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
