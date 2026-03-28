@@ -509,6 +509,11 @@ export type Database = {
                     title_code: string | null
                     total_xp: number
                     weekly_xp: number
+                    total_quiz_attempts: number | null
+                    total_correct_answers: number | null
+                    quizpack_avrg_correct: number | null
+                    weekly_unique_packs_count: number | null
+                    weekly_total_packs_count: number | null
                 }
                 Insert: {
                     created_at?: string | null
@@ -523,6 +528,11 @@ export type Database = {
                     title_code?: string | null
                     total_xp?: number
                     weekly_xp?: number
+                    total_quiz_attempts?: number | null
+                    total_correct_answers?: number | null
+                    quizpack_avrg_correct?: number | null
+                    weekly_unique_packs_count?: number | null
+                    weekly_total_packs_count?: number | null
                 }
                 Update: {
                     created_at?: string | null
@@ -537,6 +547,11 @@ export type Database = {
                     title_code?: string | null
                     total_xp?: number
                     weekly_xp?: number
+                    total_quiz_attempts?: number | null
+                    total_correct_answers?: number | null
+                    quizpack_avrg_correct?: number | null
+                    weekly_unique_packs_count?: number | null
+                    weekly_total_packs_count?: number | null
                 }
                 Relationships: []
             }

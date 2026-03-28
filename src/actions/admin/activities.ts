@@ -2,58 +2,103 @@
 
 import { createAdminClient } from '@/lib/supabase/admin';
 
-/**
- * 사용자 활동 로그(XP 획득 등)를 가져옵니다.
- */
-export async function getAdminActivityLogs(filters: {
-    userId?: number;
-    search?: string;
-    limit?: number;
-} = {}) {
-    const supabase = createAdminClient();
-
-    let query = supabase
-        .from('user_xp_history')
-        .select(`
-            *,
-            users ( nickname )
-        `)
-        .order('created_at', { ascending: false });
-
-    if (filters.userId) {
-        query = query.eq('user_id', filters.userId);
-    }
-    
-    if (filters.search) {
-        // 닉네임 검색은 join된 테이블 필터링이 복잡하므로 
-        // id 검색 위주로 처리하거나 별도 로직 구현
-        const isNumeric = !isNaN(Number(filters.search));
-        if (isNumeric) {
-            query = query.eq('user_id', filters.search);
-        }
-    }
-
-    const { data, error } = await query.limit(filters.limit || 100);
-
-    if (error) {
-        console.error('Error fetching activity logs:', error);
-        return [];
-    }
-
-    return data || [];
+export interface ActivityStat {
+    id: number;
+    nickname: string;
+    title: string | null;
+    total_xp: number;
+    weekly_xp: number;
+    weekly_ranking: number;
+    total_quiz_attempts: number;
+    total_correct_answers: number;
+    quizpack_avrg_correct: number;
+    weekly_unique_packs_count: number;
+    weekly_total_packs_count: number;
+    last_login_at: string | null;
 }
 
 /**
- * 서비스 지표 통계를 가져옵니다 (대시보드 차트용 등).
+ * 어드민 활동 관리 대시보드用の 유저 통계 목록을 가져옵니다.
+ * - users 테이블에서 통계 컬럼 조회
+ * - weekly_xp 기준으로 실시간 주간 랭킹 부여
+ * - user_login_history 에서 마지막 로그인 일시 결합
  */
-export async function getServiceMetrics() {
+export async function getAdminActivities(): Promise<ActivityStat[]> {
     const supabase = createAdminClient();
-    
-    // 최근 7일간의 날짜별 가입자 수 등 (샘플)
-    const { data, error } = await supabase
+
+    // 1. 유저 통계 정보 조회
+    const { data: users, error } = await supabase
         .from('users')
-        .select('created_at')
-        .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString());
-    
-    return data || [];
+        .select(`
+            id,
+            nickname,
+            title,
+            total_xp,
+            weekly_xp,
+            total_quiz_attempts,
+            total_correct_answers,
+            quizpack_avrg_correct,
+            weekly_unique_packs_count,
+            weekly_total_packs_count
+        `)
+        .order('weekly_xp', { ascending: false });
+
+    if (error) {
+        console.error('Error fetching admin activities:', error);
+        return [];
+    }
+
+    if (!users || users.length === 0) {
+        return [];
+    }
+
+    // 2. 랭킹 부여 (동점 처리 단순화: index 기반)
+    let currentRank = 1;
+    let prevXp = -1;
+    let rankOffset = 0;
+
+    const rankedUsers = users.map((u, index) => {
+        if (u.weekly_xp !== prevXp) {
+            currentRank = index + 1;
+            prevXp = u.weekly_xp;
+        }
+        return {
+            ...u,
+            weekly_ranking: u.weekly_xp > 0 ? currentRank : 0 // XP 없으면 랭크 0 (또는 표기 안함)
+        };
+    });
+
+    // 3. 마지막 로그인 조회
+    const userIds = rankedUsers.map((u) => u.id);
+    const { data: loginHistory } = await supabase
+        .from('user_login_history')
+        .select('user_id, created_at')
+        .in('user_id', userIds)
+        .eq('action', 'login')
+        .order('created_at', { ascending: false });
+
+    const lastLoginMap: Record<number, string> = {};
+    if (loginHistory) {
+        for (const log of loginHistory) {
+            if (!lastLoginMap[log.user_id]) {
+                lastLoginMap[log.user_id] = log.created_at || '';
+            }
+        }
+    }
+
+    // 4. 데이터 병합 후 반환
+    return rankedUsers.map((u) => ({
+        id: u.id,
+        nickname: u.nickname,
+        title: u.title,
+        total_xp: u.total_xp || 0,
+        weekly_xp: u.weekly_xp || 0,
+        weekly_ranking: u.weekly_ranking,
+        total_quiz_attempts: u.total_quiz_attempts || 0,
+        total_correct_answers: u.total_correct_answers || 0,
+        quizpack_avrg_correct: u.quizpack_avrg_correct || 0,
+        weekly_unique_packs_count: u.weekly_unique_packs_count || 0,
+        weekly_total_packs_count: u.weekly_total_packs_count || 0,
+        last_login_at: lastLoginMap[u.id] || null
+    }));
 }
