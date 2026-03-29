@@ -8,3 +8,4 @@ export { ChoiceBlank } from './ChoiceBlank';
 export { AnswerOverlay } from './AnswerOverlay';
 export { ExitConfirmDialog } from './ExitConfirmDialog';
 export { AbortConfirmDialog } from './AbortConfirmDialog';
+export { SponsorDialog } from './SponsorDialog';
