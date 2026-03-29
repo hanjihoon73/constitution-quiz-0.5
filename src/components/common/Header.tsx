@@ -63,9 +63,14 @@ export function Header({ showProfile = true }: HeaderProps) {
                 <div className="flex items-center gap-1">
                     {/* XP 모달 (로그인 된 경우만 표시) */}
                     {dbUser && (
-                        <div className="mr-2">
+                        <a
+                            href="https://maperson.notion.site/XP-32be387af28e80afa7e8c837829e3825"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="mr-2 cursor-pointer"
+                        >
                             <XpModal totalXp={dbUser.total_xp} isReady={!isLoading && isDbUserLoaded} />
-                        </div>
+                        </a>
                     )}
 
                     {/* 공유 아이콘 */}

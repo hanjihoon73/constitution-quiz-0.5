@@ -147,7 +147,7 @@ function RankItem({ item, animationDelay, isOpen, onToggle }: RankItemProps) {
 
                 {/* 사용자 정보 (닉네임 + 타이틀) */}
                 <div className="flex-1 min-w-0 flex items-center gap-4">
-                    <span className={`text-[16px] ${isMe ? 'font-bold' : 'font-regular'} text-gray-900 truncate`}>
+                    <span className={`text-[16px] ${isMe ? 'font-bold' : 'font-medium'} text-gray-900 truncate`}>
                         {item.nickname}
                     </span>
 
@@ -157,8 +157,8 @@ function RankItem({ item, animationDelay, isOpen, onToggle }: RankItemProps) {
                             <img src={`/${item.titleCode}.svg`} alt="" className="w-5 h-5 object-contain" />
                         )}
                         {item.title && (
-                            <div className="flex items-center justify-center px-3 h-5 bg-[#2D2D2D] rounded-full">
-                                <span className="text-[12px] font-medium text-white leading-none">{item.title}</span>
+                            <div className="flex items-center justify-center px-3 h-5 bg-gray-200 rounded-full">
+                                <span className="text-[12px] font-regular text-gray-900 leading-none">{item.title}</span>
                             </div>
                         )}
                         {isMe && (
