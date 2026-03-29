@@ -164,6 +164,7 @@ export default function QuizPage() {
             isXpDisabled={completedCount >= 2}
             isLastQuizCompleted={isLastQuiz && hasAnswer}
             onComplete={handleComplete}
+            packId={packId}
             navigation={
                 <div key={`nav-${currentQuiz.id}`}>
                     <QuizNavigation

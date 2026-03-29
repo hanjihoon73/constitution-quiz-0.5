@@ -62,11 +62,11 @@ export function SponsorDialog({ isOpen, onClose }: SponsorDialogProps) {
                             <p>
                                 모두의 헌법은<br />
                                 대한민국 헌법 수호와 대중화를 위해<br />
-                                <span className="font-bold text-[#111111]">무료로 운영</span>돼요.
+                                <span className="font-bold text-[#888888]">무료로 운영</span>돼요.
                             </p>
                             <p>
                                 서비스의 지속적인 운영과 개선이 가능하도록<br />
-                                <span className="font-bold text-[#111111]">작은 관심과 후원</span>을 부탁드려요.
+                                <span className="font-bold text-[#888888]">작은 관심과 후원</span>을 부탁드려요.
                             </p>
                         </div>
 

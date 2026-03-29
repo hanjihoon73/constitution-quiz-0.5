@@ -15,6 +15,7 @@ interface QuizLayoutProps {
     isXpDisabled?: boolean; // XP 비활성화 여부 (3회차 이후)
     isLastQuizCompleted?: boolean; // 마지막 퀴즈 정오답 확인 완료 여부
     onComplete?: () => Promise<void>; // 마지막 퀴즈 완료 시 호출될 콜백
+    packId?: number; // 퀴즈팩 번호
 }
 
 // ... 중간 생략 (QuizPendingXpBadge 컴포넌트) ...
@@ -61,7 +62,7 @@ function QuizPendingXpBadge({ xp, disabled = false }: { xp: number; disabled?: b
 /**
  * 퀴즈 화면 전체 레이아웃
  */
-export function QuizLayout({ children, navigation, onExit, isViewMode, pendingXp, completedCount, isXpDisabled, isLastQuizCompleted, onComplete }: QuizLayoutProps) {
+export function QuizLayout({ children, navigation, onExit, isViewMode, pendingXp, completedCount, isXpDisabled, isLastQuizCompleted, onComplete, packId }: QuizLayoutProps) {
     const router = useRouter();
     const [showExitDialog, setShowExitDialog] = useState(false);
     const [isScrolled, setIsScrolled] = useState(false);
@@ -159,7 +160,7 @@ export function QuizLayout({ children, navigation, onExit, isViewMode, pendingXp
                     {/* 우측: 진행 회차 표시 (나가기 버튼 옆) */}
                     {!isViewMode && completedCount !== undefined && (
                         <span className="text-[12px] font-bold text-[#FF8400] bg-[#FFF3E6] px-2 py-[2px] rounded-full border border-[#FFD6A5]">
-                            {completedCount + 1}회차
+                            {packId ? `${packId}번 퀴즈팩 - ` : ''}{completedCount + 1}회차
                         </span>
                     )}
                     </div>
