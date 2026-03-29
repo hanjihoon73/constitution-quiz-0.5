@@ -216,7 +216,7 @@ export default function ProfilePage() {
                         {dbUser?.role === 'admin' && (
                             <button
                                 onClick={() => router.push('/admin')}
-                                className="absolute right-4 top-4 p-2 rounded-xl bg-slate-100 text-slate-500 hover:text-indigo-600 hover:bg-slate-200 transition-all active:scale-95 group z-50 animate-in fade-in zoom-in duration-300"
+                                className="absolute right-4 top-4 p-2 rounded-xl bg-white text-slate-500 hover:text-indigo-600 transition-all active:scale-95 group z-50 animate-in fade-in zoom-in duration-300 cursor-pointer"
                                 title="어드민 페이지로 이동"
                                 type="button"
                             >
@@ -313,7 +313,7 @@ export default function ProfilePage() {
                                             {dbUser?.nickname}
                                             <button
                                                 onClick={startEditNickname}
-                                                className="absolute right-0 top-1/2 -translate-y-1/2 p-1.5 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-all active:scale-95"
+                                                className="absolute right-0 top-1/2 -translate-y-1/2 p-1.5 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-all active:scale-95 cursor-pointer"
                                             >
                                                 <Pencil size={18} />
                                             </button>
