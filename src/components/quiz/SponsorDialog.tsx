@@ -75,7 +75,7 @@ export function SponsorDialog({ isOpen, onClose }: SponsorDialogProps) {
                                 후원계좌
                             </p>
                             <p className="text-[#111111] text-[16px] font-bold tracking-tight">
-                                KB 000-0000-0000 코그니티
+                                KB 839837 01 011166 코그니티
                             </p>
                         </div>
                     </DialogHeader>

@@ -76,7 +76,7 @@ export default function LoginPage() {
                         rel="noopener noreferrer"
                         className="text-sm text-gray-400 transition-all duration-200 hover:-translate-y-0.5 active:scale-95 hover:text-gray-600 inline-block cursor-pointer"
                     >
-                        v 1.0
+                        beta v1.0
                     </a>
                 </div>
 
