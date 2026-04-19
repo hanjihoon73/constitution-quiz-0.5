@@ -7,7 +7,6 @@ import { useAuth } from '@/components/auth';
 import { getUserQuizProgress, updateQuizpackStatistics, saveQuizpackRating, unlockNextQuizpack, getUserQuizpackId, resetUserQuizpack } from '@/lib/api/quiz';
 import { Star, Clock, ArrowLeft, PartyPopper, SearchCheck } from 'lucide-react';
 import { useConfetti } from '@/hooks/useConfetti';
-import { SponsorDialog } from '@/components/quiz';
 
 interface QuizResult {
     totalQuizCount: number;
@@ -32,8 +31,6 @@ export default function QuizCompletePage() {
     const [rating, setRating] = useState<number>(0);
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
-    const [showSponsor, setShowSponsor] = useState(false);
-    const [pendingAction, setPendingAction] = useState<'next' | 'home' | null>(null);
 
     // 퀴즈 결과 로드
     useEffect(() => {
@@ -206,33 +203,12 @@ export default function QuizCompletePage() {
 
     // 다음 퀴즈팩으로 이동
     const handleNextQuizpack = () => {
-        if (packId % 4 === 0) {
-            setPendingAction('next');
-            setShowSponsor(true);
-        } else {
-            handleSaveAndNavigate('next');
-        }
+        handleSaveAndNavigate('next');
     };
 
     // 홈으로 이동
     const handleGoHome = () => {
-        if (packId % 4 === 0) {
-            setPendingAction('home');
-            setShowSponsor(true);
-        } else {
-            handleSaveAndNavigate('home');
-        }
-    };
-
-    // 후원 팝업 닫기 및 보류된 액션 실행
-    const handleSponsorClose = () => {
-        setShowSponsor(false);
-        if (pendingAction) {
-            setTimeout(() => {
-                handleSaveAndNavigate(pendingAction);
-                setPendingAction(null);
-            }, 100);
-        }
+        handleSaveAndNavigate('home');
     };
 
     // 결과보기 핸들러
@@ -529,8 +505,6 @@ export default function QuizCompletePage() {
                     </button>
                 </div>
             </div>
-
-            <SponsorDialog isOpen={showSponsor} onClose={handleSponsorClose} />
         </MobileFrame>
     );
 }
