@@ -1,6 +1,6 @@
 'use client';
 
-// deploy trigger
+// deploy trigger retry
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { MobileFrame } from '@/components/common';
